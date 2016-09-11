@@ -1,4 +1,6 @@
 *.pyc
 /.cache
 Reqs
-
+/build
+/dist
+/*.egg-info
