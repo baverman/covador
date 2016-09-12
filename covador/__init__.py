@@ -1,4 +1,5 @@
 from functools import wraps
+from .compat import utype, btype, stype, ustr, bstr
 
 
 class PipeMixin(object):
@@ -180,23 +181,6 @@ class ListMap(Map):
             return data[field.source_key]
         else:
             return data[field.source_key][0]
-
-
-utype = type(u'')
-btype = type(b'')
-stype = type('')
-
-
-def bstr(data):
-    if type(data) is utype:
-        data = data.encode('latin1')
-    return data
-
-
-def ustr(data):
-    if type(data) is btype:
-        data = data.decode('latin1')
-    return data
 
 
 class Int(Type):

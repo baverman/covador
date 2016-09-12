@@ -5,7 +5,7 @@ from . import ListMap, make_schema, make_validator
 
 
 def on_error(exc):
-    raise web.HTTPError(400, reason=exc.message)
+    raise web.HTTPError(400, reason=str(exc))
 
 
 schema = make_schema(ListMap)
