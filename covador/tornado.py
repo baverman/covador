@@ -12,7 +12,9 @@ schema = make_schema(ListMap)
 _query_string = lambda self, *args, **kwargs: self.request.query_arguments
 _form = lambda self, *args, **kwargs: self.request.body_arguments
 _params = lambda self, *args, **kwargs: self.request.arguments
+_rparams = lambda self, *args, **kwargs: kwargs
 
 query_string = make_validator(_query_string, on_error, schema)
 form = make_validator(_form, on_error, schema)
 params = make_validator(_params, on_error, schema)
+rparams = make_validator(_rparams, on_error, schema)

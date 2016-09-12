@@ -1,4 +1,6 @@
-from covador import Int, Str, Bytes, split
+import pytest
+
+from covador import Int, Str, Bytes, split, enum
 
 
 def test_int():
@@ -26,4 +28,31 @@ def test_split():
     assert split()('aa, bb') == ['aa', 'bb']
     assert split(strip=False)('aa, bb') == ['aa', ' bb']
     assert split(int)('1, 3, 5') == [1, 3, 5]
+    assert split(int)('1, 3, 5,,') == [1, 3, 5]
     assert split(int, separator=None)('1\t2') == [1, 2]
+
+
+def test_enum():
+    assert enum(1, 2)(1) == 1
+
+    with pytest.raises(ValueError) as ei:
+        enum(1, 2)(3)
+    assert ei.value.message == '3 not in [1, 2]'
+
+    assert enum(['boo', 'foo'])('boo') == 'boo'
+
+    with pytest.raises(ValueError) as ei:
+        enum(['boo', 'foo'])('bar')
+    assert ei.value.message == "'bar' not in ['boo', 'foo']"
+
+
+def test_split_enum():
+    with pytest.raises(ValueError) as ei:
+        print split(enum('boo', 'foo'))('boo, bar, foo')
+
+
+    e = ei.value
+    assert e.clean == ['boo', None, 'foo']
+    assert len(e.errors) == 1
+    assert e.errors[0][0] == 1
+    assert e.errors[0][1].message == "'bar' not in ['boo', 'foo']"

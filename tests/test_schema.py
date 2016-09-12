@@ -1,6 +1,6 @@
 import pytest
 
-from covador import Map, opt, item, Invalid, List, Tuple, schema, wrap_in, ListMap
+from covador import opt, item, Invalid, List, Tuple, schema, wrap_in, ListMap
 
 
 def test_existing_field():
@@ -15,14 +15,14 @@ def test_required_field():
         s({'boo': 20})
 
     e = ei.value
-    assert e.valid == {'boo': 20}
+    assert e.clean == {'boo': 20}
     assert e.errors[0][0] == 'foo'
 
     with pytest.raises(Invalid) as ei:
         s({'foo': None, 'boo': 20})
 
     e = ei.value
-    assert e.valid == {'boo': 20}
+    assert e.clean == {'boo': 20}
     assert e.errors[0][0] == 'foo'
 
 
@@ -60,3 +60,14 @@ def test_wrap_in():
     s = List(int) | wrap_in('data')
     result = s([1, 2, 3])
     assert result == {'data': [1, 2, 3]}
+
+
+def test_item_pipe():
+    s = item() | int
+    assert s('10') == 10
+
+    s = opt(default='20') | int
+    assert s(None) == '20'
+
+    with pytest.raises(ValueError):
+        item()(None)

@@ -6,29 +6,67 @@ class PipeMixin(object):
         return Pipe([self, other])
 
 
+Type = PipeMixin
+
+
 class Pipe(PipeMixin):
-    def __init__(self, items):
-        self.items = items
+    def __init__(self, pipe):
+        self.pipe = pipe
 
     def __call__(self, data):
-        for it in self.items:
+        for it in self.pipe:
             data = it(data)
         return data
 
     def __or__(self, other):
-        return Pipe(self.items + [other])
+        return Pipe(self.pipe + [other])
+
+    def __ror__(self, other):
+        return Pipe([other] + self.pipe)
 
 
-class Item(object):
-    def __init__(self, **params):
-        self.__dict__.update(params)
+class item(object):
+    def __init__(self, typ=None, source_key=None, required=True,
+                 default=None, multi=False, **kwargs):
+        self.source_key = source_key
+        self.required = required
+        self.default = default
+        self.multi = multi
+        self.__dict__.update(kwargs)
+        self.typ = typ and wrap_type(typ)
+        self.pipe = []
 
+    def clone(self):
+        obj = object.__new__(item)
+        obj.__dict__.update(self.__dict__)
+        obj.pipe = obj.pipe[:]
+        return obj
 
-def item(typ=None, source_key=None, required=True,
-         default=None, multi=False, **kwargs):
-    typ = wrap_type(typ)
-    return Item(source_key=source_key, required=required,
-                default=default, multi=multi, process=typ, **kwargs)
+    def __or__(self, other):
+        obj = self.clone()
+        obj.pipe.append(other)
+        return obj
+
+    def __ror__(self, other):
+        obj = self.clone()
+        obj.pipe.insert(0, other)
+        return obj
+
+    def __call__(self, data):
+        if data is None:
+            if self.required:
+                raise ValueError('Required item')
+            else:
+                return self.default
+        else:
+            if self.typ:
+                data = self.typ(data)
+
+            if self.pipe:
+                for it in self.pipe:
+                    data = it(data)
+
+        return data
 
 
 def opt(*args, **kwargs):
@@ -48,19 +86,19 @@ def wrap_type(typ):
 
 
 def get_item(it):
-    if not isinstance(it, Item):
+    if not isinstance(it, item):
         it = item(it)
     return it
 
 
 class Invalid(ValueError):
-    def __init__(self, errors, valid):
+    def __init__(self, errors, clean):
         self.errors = errors
-        self.valid = valid
+        self.clean = clean
         ValueError.__init__(self, repr(self.errors))
 
 
-class Map(PipeMixin):
+class Map(Type):
     def __init__(self, items):
         self.items = {}
         for k, it in items.items():
@@ -79,18 +117,13 @@ class Map(PipeMixin):
         for k, it in self.items.items():
             try:
                 raw_data = get(data, it)
-                if raw_data is None:
-                    raise KeyError('None')
             except KeyError:
-                if it.required:
-                    errors.append((it.source_key, ValueError('Required field')))
-                else:
-                    result[k] = it.default
-            else:
-                try:
-                    result[k] = it.process(raw_data)
-                except Exception as e:
-                    errors.append((it.source_key, e))
+                raw_data = None
+
+            try:
+                result[k] = it(raw_data)
+            except Exception as e:
+                errors.append((it.source_key, e))
 
         if errors:
             raise Invalid(errors, result)
@@ -98,7 +131,7 @@ class Map(PipeMixin):
         return result
 
 
-class List(PipeMixin):
+class List(Type):
     def __init__(self, item):
         self.item = get_item(item)
 
@@ -108,23 +141,19 @@ class List(PipeMixin):
         rappend = result.append
         it = self.item
         for idx, raw_data in enumerate(data):
-            if raw_data is None:
-                if it.required:
-                    rappend(None)
-                    errors.append((idx, ValueError('Required field')))
-                else:
-                    rappend(it.default)
-            else:
-                try:
-                    rappend(it.process(raw_data))
-                except Exception as e:
-                    rappend(None)
-                    errors.append((idx, e))
+            try:
+                rappend(it(raw_data))
+            except Exception as e:
+                rappend(None)
+                errors.append((idx, e))
+
+        if errors:
+            raise Invalid(errors, result)
 
         return result
 
 
-class Tuple(PipeMixin):
+class Tuple(Type):
     def __init__(self, items):
         self.items = [get_item(r) for r in items]
 
@@ -133,18 +162,14 @@ class Tuple(PipeMixin):
         errors = []
         rappend = result.append
         for idx, (it, raw_data) in enumerate(zip(self.items, data)):
-            if raw_data is None:
-                if it.required:
-                    rappend(None)
-                    errors.append((idx, ValueError('Required field')))
-                else:
-                    rappend(it.default)
-            else:
-                try:
-                    rappend(it.process(raw_data))
-                except Exception as e:
-                    rappend(None)
-                    errors.append((idx, e))
+            try:
+                rappend(it(raw_data))
+            except Exception as e:
+                rappend(None)
+                errors.append((idx, e))
+
+        if errors:
+            raise Invalid(errors, result)
 
         return result
 
@@ -174,7 +199,7 @@ def ustr(data):
     return data
 
 
-class Int(PipeMixin):
+class Int(Type):
     def __init__(self, base=10):
         self.base = base
 
@@ -184,7 +209,7 @@ class Int(PipeMixin):
         return int(data)
 
 
-class Str(PipeMixin):
+class Str(Type):
     def __init__(self, encoding='utf-8'):
         self.encoding = encoding
 
@@ -200,7 +225,7 @@ class Str(PipeMixin):
             return stype(data)
 
 
-class Bytes(PipeMixin):
+class Bytes(Type):
     def __init__(self, encoding='utf-8'):
         self.encoding = encoding
 
@@ -213,13 +238,14 @@ class Bytes(PipeMixin):
             return self(stype(data))
 
 
-class split(PipeMixin):
-    def __init__(self, item=None, separator=',', strip=True):
+class split(Type):
+    def __init__(self, item=None, separator=',', strip=True, empty=False):
         self.separators = {
             utype: ustr(separator),
             btype: bstr(separator)
         }
         self.strip = strip
+        self.empty = empty
         self.list = item and List(item)
 
     def __call__(self, data):
@@ -227,10 +253,29 @@ class split(PipeMixin):
         if self.strip:
             val = [r.strip() for r in val]
 
+        if not self.empty:
+            val = filter(None, val)
+
         if self.list:
             val = self.list(val)
 
         return val
+
+
+class enum(Type):
+    def __init__(self, *choices):
+        if len(choices) == 1 and type(choices[0]) in (list, tuple):
+            self.choices = set(choices[0])
+        else:
+            self.choices = set(choices)
+
+        self.choices_str = repr(sorted(self.choices))
+
+    def __call__(self, data):
+        if data not in self.choices:
+            raise ValueError('{} not in {}'.format(repr(data), self.choices_str))
+
+        return data
 
 
 def wrap_in(key):
@@ -241,6 +286,8 @@ TYPES = {
     int: Int(),
     str: Str(),
     'bytes': Bytes(),
+    'str': Str(),
+    'int': Int(),
     None: lambda it: it
 }
 
