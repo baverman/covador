@@ -26,12 +26,12 @@ Validation library for processing http endpoint arguments.
 * Support for flask, django and tornado.
 * Simple creating of custom ``query_sttring``/``form``/``params`` wrappers.
 * Multi dict support via item ``multi`` param.
-* Multi dict keys support vial item ``source_key`` param.
+* Multi dict keys support via item ``source_key`` param.
 * Simple interface for custom validators/processors it's just a callable.
 * Maps, Lists, Tuples, Enums.
 * Validation chains: ``opt(default=[]) | split(separator=' ') | List(int) | (lambda it: it[:10])`` —
-  optional argument space separated integers and we need top 10 items from it.
+  an optional argument of space separated integers and we need top 10 items from it.
 * Literal schema: ``schema(foo=[{'boo': int}])``, validates ``{'foo': [{'boo': 10}, {'boo': 20}]}``.
 * Build-in splitter.
-* byte/unicode aware.
+* Bytes/unicode aware.
 * py2/py3 compatible.
