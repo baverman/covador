@@ -2,8 +2,7 @@ from __future__ import absolute_import
 
 from django import http
 from . import ListMap, make_schema, make_validator
-from .compat import urlparse
-from .utils import method, merge_dicts
+from .utils import method, merge_dicts, parse_qs
 
 
 def on_error(exc):
@@ -14,7 +13,7 @@ def get_qs(request):
     try:
         return request._covador_qs
     except AttributeError:
-        qs = request._covador_qs = urlparse.parse_qs(request.environ.get('QUERY_STRING', ''))
+        qs = request._covador_qs = parse_qs(request.environ.get('QUERY_STRING', ''))
         return qs
 
 
@@ -22,7 +21,7 @@ def get_form(request):
     try:
         return request._covador_form
     except AttributeError:
-        form = request._covador_form = urlparse.parse_qs(request.body)
+        form = request._covador_form = parse_qs(request.body)
         return form
 
 
