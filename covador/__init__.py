@@ -254,7 +254,7 @@ class split(Type):
             val = [r.strip() for r in val]
 
         if not self.empty:
-            val = filter(None, val)
+            val = list(filter(None, val))
 
         if self.list:
             val = self.list(val)

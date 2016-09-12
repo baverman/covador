@@ -37,22 +37,21 @@ def test_enum():
 
     with pytest.raises(ValueError) as ei:
         enum(1, 2)(3)
-    assert ei.value.message == '3 not in [1, 2]'
+    assert str(ei.value) == '3 not in [1, 2]'
 
     assert enum(['boo', 'foo'])('boo') == 'boo'
 
     with pytest.raises(ValueError) as ei:
         enum(['boo', 'foo'])('bar')
-    assert ei.value.message == "'bar' not in ['boo', 'foo']"
+    assert str(ei.value) == "'bar' not in ['boo', 'foo']"
 
 
 def test_split_enum():
     with pytest.raises(ValueError) as ei:
-        print split(enum('boo', 'foo'))('boo, bar, foo')
-
+        split(enum('boo', 'foo'))('boo, bar, foo')
 
     e = ei.value
     assert e.clean == ['boo', None, 'foo']
     assert len(e.errors) == 1
     assert e.errors[0][0] == 1
-    assert e.errors[0][1].message == "'bar' not in ['boo', 'foo']"
+    assert str(e.errors[0][1]) == "'bar' not in ['boo', 'foo']"
