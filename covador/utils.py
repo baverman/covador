@@ -23,3 +23,26 @@ def parse_qs(data):
     if not PY2:
         result = {ustr(k): v for k, v in result.items()}
     return result
+
+
+def wrap_in(key):
+    return lambda val: {key: val}
+
+
+def make_validator(getter, on_error, top_schema):
+    def validator(*args, **kwargs):
+        s = top_schema(*args, **kwargs)
+        def decorator(func):
+            @wraps(func)
+            def inner(*args, **kwargs):
+                data = getter(*args, **kwargs)
+                try:
+                    data = s(data)
+                except Exception as e:
+                    return on_error(e)
+                else:
+                    kwargs.update(data)
+                    return func(*args, **kwargs)
+            return inner
+        return decorator
+    return validator
