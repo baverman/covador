@@ -1,6 +1,7 @@
 import pytest
 
 from covador import opt, item, Invalid, List, Tuple, schema, wrap_in, ListMap
+from covador.schema import Pipe
 
 
 def test_existing_field():
@@ -38,28 +39,14 @@ def test_source_key():
     assert result == {'foo': 10}
 
 
-def test_multi_map():
-    s = ListMap({'foo': int, 'boo': item(multi=True)})
-    result = s({'foo': ['10'], 'boo': [1, 2]})
-    assert result == {'foo': 10, 'boo': [1, 2]}
+def test_literal_schema():
+    s = schema(foo={'boo': [(int, int)]})
+    assert s({'foo': {'boo': [('1', '2'), ('3', '4')]}}) == {'foo': {'boo': [[1, 2], [3, 4]]}}
 
 
-def test_list():
-    s = List(int)
-    result = s(['1', '2', '3'])
-    assert result == [1, 2, 3]
-
-
-def test_tuple():
-    s = Tuple((int, str))
-    result = s(['1', 2])
-    assert result == [1, '2']
-
-
-def test_wrap_in():
-    s = List(int) | wrap_in('data')
-    result = s([1, 2, 3])
-    assert result == {'data': [1, 2, 3]}
+def test_pipe():
+    assert (Pipe([str, str.strip]) | str.lower)(' AA ') == 'aa'
+    assert (str | Pipe([str.strip, str.lower]))(' AA ') == 'aa'
 
 
 def test_item_pipe():
@@ -71,3 +58,5 @@ def test_item_pipe():
 
     with pytest.raises(ValueError):
         item()(None)
+
+    assert (int | item())('10') == 10

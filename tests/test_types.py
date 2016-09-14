@@ -1,6 +1,7 @@
 import pytest
 
-from covador import Int, Str, Bytes, split, enum, irange, frange, length
+from covador import item, Invalid
+from covador.types import *
 
 
 def test_int():
@@ -19,7 +20,7 @@ def test_str():
 
 
 def test_bytes():
-    assert repr(Bytes()('aaa')) == repr(b'aaa')
+    assert repr(Bytes()(u'aaa')) == repr(b'aaa')
     assert repr(Bytes()(b'aaa')) == repr(b'aaa')
     assert repr(Bytes()(10)) == repr(b'10')
 
@@ -30,6 +31,11 @@ def test_split():
     assert split(int)('1, 3, 5') == [1, 3, 5]
     assert split(int)('1, 3, 5,,') == [1, 3, 5]
     assert split(int, separator=None)('1\t2') == [1, 2]
+
+    assert repr(split(separator=b',')(b'boo')) == repr([b'boo'])
+    assert repr(split(separator=u',')(b'boo')) == repr([b'boo'])
+    assert repr(split(separator=b',')(u'boo')) == repr([u'boo'])
+    assert repr(split(separator=u',')(u'boo')) == repr([u'boo'])
 
 
 def test_enum():
@@ -63,10 +69,13 @@ def test_int_range():
     assert r(0) == 0
     assert r(10) == 10
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(ValueError) as ei:
         assert r(-1)
+    assert str(ei.value) == '-1 is less then 0'
 
-    assert str(e.value) == '-1 is less then 0'
+    with pytest.raises(ValueError) as ei:
+        assert r(11)
+    assert str(ei.value) == '11 is greater then 10'
 
 
 def test_float_range():
@@ -94,3 +103,28 @@ def test_length():
     with pytest.raises(ValueError) as ei:
         assert l('1234')
     assert str(ei.value) == 'Length of 4 is greater then 3'
+
+
+def test_multi_map():
+    s = ListMap({'foo': int, 'boo': item(multi=True)})
+    result = s({'foo': ['10'], 'boo': [1, 2]})
+    assert result == {'foo': 10, 'boo': [1, 2]}
+
+
+def test_list():
+    s = List(int)
+    result = s(['1', '2', '3'])
+    assert result == [1, 2, 3]
+
+
+def test_tuple():
+    s = Tuple((int, str))
+    result = s(['1', 2])
+    assert result == [1, '2']
+
+    with pytest.raises(Invalid) as ei:
+        s(['boo', 2])
+
+    e = ei.value
+    assert e.clean == [None, '2']
+    assert e.errors[0][0] == 0
