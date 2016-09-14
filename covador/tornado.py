@@ -4,7 +4,7 @@ from tornado import web
 from . import ListMap, make_schema, make_validator
 
 
-def on_error(exc):
+def on_error(exc):  # pragma: no cover
     raise web.HTTPError(400, reason=str(exc))
 
 

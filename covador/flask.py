@@ -7,7 +7,7 @@ from . import ListMap, make_schema, make_validator
 from .utils import merge_dicts, parse_qs
 
 
-def on_error(exc):
+def on_error(exc):  # pragma: no cover
     raise BadRequest(str(exc))
 
 

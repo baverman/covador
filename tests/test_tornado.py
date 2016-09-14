@@ -1,3 +1,10 @@
+import sys
+
+class tornado:
+    web = None
+
+sys.modules['tornado'] = tornado
+
 from covador import tornado as cw
 from covador import item, wrap_in
 

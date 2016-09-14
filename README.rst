@@ -1,6 +1,14 @@
 covador
 =======
 
+.. image:: https://travis-ci.org/baverman/covador.svg?branch=master
+   :target: https://travis-ci.org/baverman/covador
+
+.. image:: https://img.shields.io/badge/coverage-100%25-brightgreen.svg
+
+.. image:: https://img.shields.io/badge/python-2.7%2C_3.4%2C_3.5%2C_pypy-blue.svg
+
+
 Validation library for processing http endpoint arguments.
 
 .. code:: python
@@ -32,6 +40,4 @@ Validation library for processing http endpoint arguments.
 * Validation chains: ``opt(default=[]) | split(separator=' ') | List(int) | (lambda it: it[:10])`` —
   an optional argument of space separated integers and we need top 10 items from it.
 * Literal schema: ``schema(foo=[{'boo': int}])``, validates ``{'foo': [{'boo': 10}, {'boo': 20}]}``.
-* Build-in splitter.
 * Bytes/unicode aware.
-* py2/py3 compatible.

@@ -2,10 +2,10 @@ from __future__ import absolute_import
 
 from django import http
 from . import ListMap, make_schema, make_validator
-from .utils import method, merge_dicts, parse_qs
+from .utils import merge_dicts, parse_qs
 
 
-def on_error(exc):
+def on_error(exc):  # pragma: no cover
     return http.HttpResponseBadRequest(str(exc))
 
 

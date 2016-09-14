@@ -1,0 +1,10 @@
+language: python
+python:
+  - "2.7"
+  - "3.4"
+  - "3.5"
+  - "pypy"
+install: pip install -r requirements.txt
+script:
+    - if [[ $TRAVIS_PYTHON_VERSION == 3* ]]; then export py_ver=py3; else export py_ver=py2; fi
+    - py.test --cov covador --cov-report term-missing --cov-fail-under=100 --cov-config cov-$py_ver.ini
