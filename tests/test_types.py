@@ -143,6 +143,8 @@ def test_bool():
     assert not b(b'false')
     assert not b(b'0')
     assert not b(b'')
+    assert not b(b'n')
+    assert not b(b'f')
     assert b(b'sdf')
 
     assert not b(u'no')
@@ -150,4 +152,6 @@ def test_bool():
     assert not b(u'false')
     assert not b(u'0')
     assert not b(u'')
+    assert not b(u'n')
+    assert not b(u'f')
     assert b(u'sdf')

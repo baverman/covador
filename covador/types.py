@@ -1,6 +1,9 @@
 from .compat import utype, btype, stype, ustr, bstr
 from .schema import Pipeable, get_item, Invalid, ALIASES, TYPES
 
+__all__ = ['Map', 'List', 'Tuple', 'Int', 'Str', 'Bool', 'split', 'Range',
+           'irange', 'frange', 'length', 'enum', 'ListMap', 'Bytes']
+
 
 class Map(Pipeable):
     def __init__(self, items):
@@ -96,12 +99,15 @@ class Int(Pipeable):
         return int(data)
 
 
+bool_false_values = {btype: (b'false', b'0', b'', b'no', b'n', b'f')}
+bool_false_values[utype] = tuple(map(ustr, bool_false_values[btype]))
+
+
 class Bool(Pipeable):
     def __call__(self, data):
-        if type(data) is btype:
-            return data.lower().strip() not in (b'no', b'false', b'0', b'')
-        elif type(data) is utype:
-            return data.lower().strip() not in (u'no', u'false', u'0', u'')
+        dtype = type(data)
+        if dtype is btype or dtype is utype:
+            return data.lower().strip() not in bool_false_values[dtype]
         return bool(data)
 
 
