@@ -96,6 +96,15 @@ class Int(Pipeable):
         return int(data)
 
 
+class Bool(Pipeable):
+    def __call__(self, data):
+        if type(data) is btype:
+            return data.lower().strip() not in (b'no', b'false', b'0', b'')
+        elif type(data) is utype:
+            return data.lower().strip() not in (u'no', u'false', u'0', u'')
+        return bool(data)
+
+
 class Str(Pipeable):
     def __init__(self, encoding='utf-8'):
         self.encoding = encoding
@@ -209,4 +218,6 @@ ALIASES.update({
     str: Str(),
     'str': Str(),
     'bytes': Bytes(),
+    bool: Bool(),
+    'bool': Bool(),
 })

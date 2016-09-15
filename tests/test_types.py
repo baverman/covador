@@ -128,3 +128,26 @@ def test_tuple():
     e = ei.value
     assert e.clean == [None, '2']
     assert e.errors[0][0] == 0
+
+
+def test_bool():
+    b = Bool()
+    assert not b(False)
+    assert not b(None)
+    assert not b(0)
+    assert b(True)
+    assert b(1)
+
+    assert not b(b'no')
+    assert not b(b'No')
+    assert not b(b'false')
+    assert not b(b'0')
+    assert not b(b'')
+    assert b(b'sdf')
+
+    assert not b(u'no')
+    assert not b(u'No')
+    assert not b(u'false')
+    assert not b(u'0')
+    assert not b(u'')
+    assert b(u'sdf')
