@@ -1,7 +1,7 @@
 import pytest
 
-from covador import opt, item, Invalid, List, Tuple, schema, wrap_in, ListMap
-from covador.schema import Pipe
+from covador import schema
+from covador.schema import Pipe, opt, item, Invalid
 
 
 def test_existing_field():
@@ -60,3 +60,11 @@ def test_item_pipe():
         item()(None)
 
     assert (int | item())('10') == 10
+
+
+def test_smart_schema():
+    s = schema({'foo': int}, {'foo': str})
+    assert s({'foo': 10}) == {'foo': '10'}
+
+    s = schema(schema(foo=int), schema(foo=str), boo=int)
+    assert s({'foo': 10, 'boo': '20'}) == {'foo': '10', 'boo': 20}

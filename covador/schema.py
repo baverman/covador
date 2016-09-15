@@ -1,3 +1,5 @@
+from .utils import merge_dicts
+
 ALIASES = {
     None: lambda it: it
 }
@@ -93,7 +95,9 @@ def get_item(it):
 def make_schema(top_schema):
     def schema(*args, **kwargs):
         if args:
-            return args[0]
+            if len(args) == 1 and not kwargs:
+                return args[0]
+            return top_schema(merge_dicts(*args, **kwargs))
         return top_schema(kwargs)
     return schema
 

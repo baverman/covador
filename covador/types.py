@@ -17,6 +17,9 @@ class Map(Pipeable):
     def get(self, data, item):
         return data[item.source_key]
 
+    def __iter__(self):
+        return iter(self.items.items())
+
     def __call__(self, data):
         errors = []
         result = {}
