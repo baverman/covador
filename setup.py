@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='covador',
-    version='0.7',
+    version='0.7.1',
     url='https://github.com/baverman/covador/',
     license='MIT',
     author='Anton Bobrov',
