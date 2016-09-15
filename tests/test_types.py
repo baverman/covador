@@ -155,3 +155,11 @@ def test_bool():
     assert not b(u'n')
     assert not b(u'f')
     assert b(u'sdf')
+
+
+def test_regex():
+    assert regex('boo')('boo') == 'boo'
+    assert regex('boo')('fooboofoo') == 'fooboofoo'
+
+    with pytest.raises(ValueError):
+        assert regex('^boo$')('fooboofoo')

@@ -1,8 +1,12 @@
+# -*- coding: utf-8 -*-
+import re
+
 from .compat import utype, btype, stype, ustr, bstr
 from .schema import Pipeable, get_item, Invalid, ALIASES, TYPES
 
 __all__ = ['Map', 'List', 'Tuple', 'Int', 'Str', 'Bool', 'split', 'Range',
-           'irange', 'frange', 'length', 'enum', 'ListMap', 'Bytes']
+           'irange', 'frange', 'length', 'enum', 'ListMap', 'Bytes', 'regex',
+           'email', 'url', 'uuid']
 
 
 class Map(Pipeable):
@@ -212,6 +216,24 @@ class Range(Pipeable):
 
 irange = lambda min=None, max=None, base=None: Int(base=base) | Range(min, max)
 frange = lambda min=None, max=None: float | Range(min, max)
+
+
+class regex(Pipeable):
+    def __init__(self, pattern, flags=0):
+        self.re = re.compile(pattern, flags)
+
+    def __call__(self, data):
+        if not self.re.search(data):
+            raise ValueError('Mismatch')
+        return data
+
+
+email = Str() | regex("(?i)^[A-Z0-9._%!#$%&'*+-/=?^_`{|}~()]+@[A-Z0-9]+([.-][A-Z0-9]+)*\.[A-Z]{2,22}$")
+
+URL_REGEX = r"""(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))"""
+url = Str() | regex(URL_REGEX)
+
+uuid = Str() | regex(r"(?i)^(?:urn:uuid:)?\{?[a-f0-9]{8}(?:-?[a-f0-9]{4}){3}-?[a-f0-9]{12}\}?$")
 
 
 TYPES.update({
