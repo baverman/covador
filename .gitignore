@@ -7,3 +7,4 @@ Reqs
 /htmlcov
 /.coverage
 TODO
+/docs/_build

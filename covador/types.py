@@ -1,15 +1,95 @@
 # -*- coding: utf-8 -*-
 import re
 
+from .utils import Pipeable
 from .compat import utype, btype, stype, ustr, bstr
-from .schema import Pipeable, get_item, Invalid, ALIASES, TYPES
 
 __all__ = ['Map', 'List', 'Tuple', 'Int', 'Str', 'Bool', 'split', 'Range',
            'irange', 'frange', 'length', 'enum', 'ListMap', 'Bytes', 'regex',
-           'email', 'url', 'uuid']
+           'email', 'url', 'uuid', 'item', 'opt', 'Invalid']
+
+
+class item(object):
+    def __init__(self, typ=None, source_key=None, required=True,
+                 default=None, multi=False, **kwargs):
+        self.source_key = source_key
+        self.required = required
+        self.default = default
+        self.multi = multi
+        self.__dict__.update(kwargs)
+        self.typ = typ and wrap_type(typ)
+        self.pipe = []
+
+    def clone(self):
+        obj = object.__new__(item)
+        obj.__dict__.update(self.__dict__)
+        obj.pipe = obj.pipe[:]
+        return obj
+
+    def __or__(self, other):
+        obj = self.clone()
+        obj.pipe.append(other)
+        return obj
+
+    def __ror__(self, other):
+        obj = self.clone()
+        obj.pipe.insert(0, other)
+        return obj
+
+    def __call__(self, data):
+        if data is None:
+            if self.required:
+                raise ValueError('Required item')
+            else:
+                return self.default
+        else:
+            if self.typ:
+                data = self.typ(data)
+
+            if self.pipe:
+                for it in self.pipe:
+                    data = it(data)
+
+        return data
+
+
+def opt(*args, **kwargs):
+    return item(*args, required=False, **kwargs)
+
+
+def get_item(it):
+    if not isinstance(it, item):
+        it = item(it)
+    return it
+
+
+class Invalid(ValueError):
+    def __init__(self, errors, clean):
+        self.errors = errors
+        self.clean = clean
+        ValueError.__init__(self, repr(self.errors))
 
 
 class Map(Pipeable):
+    '''Dict checker
+
+    :param items: Dict with fields. Key is a destination key,
+                  value is an alias, any callable or covador.schema.item.
+
+    If source dict does not contain a key, key value is considered None.
+
+    item can have source_key param to be able to specify source key, by
+    default it equals to field key.
+    ::
+
+        Map({'foo': int})({'foo': '10'}) -> {'foo': 10}
+
+        Map({'foo': opt(int)})({}) -> None
+
+        m = Map({'raw': item('bytes', source_key='data'),
+                 'decoded': item('str', source_key='data')})
+        m({'data': b'data'}) -> {'raw': b'data', 'decoded': u'data'}
+    '''
     def __init__(self, items):
         self.items = {}
         for k, it in items.items():
@@ -19,6 +99,15 @@ class Map(Pipeable):
             self.items[k] = it
 
     def get(self, data, item):
+        '''Get corresponding data for item
+
+        :param data: source data
+        :param item: item to get
+        :raise KeyError: if item not found
+
+        Subsclasses can override this method to implement map access to more complex
+        structures then plain dict
+        '''
         return data[item.source_key]
 
     def __iter__(self):
@@ -46,6 +135,21 @@ class Map(Pipeable):
 
 
 class List(Pipeable):
+    '''List checker
+
+    :param item: an alias, any callable or covador.schema.item.
+
+    Checks each source element against provided item.
+
+    ::
+
+        List(int)(['1', '2']) -> [1, 2]
+
+        List(opt(int, default=42))(['1', '2', None]) -> [1, 2, 42]
+
+        List(enum('boo', 'foo'))(['boo', 'bar', 'foo'])
+            -> covador.schema.Invalid: [(1, ValueError("'bar' not in ['boo', 'foo']",))]
+    '''
     def __init__(self, item):
         self.item = get_item(item)
 
@@ -68,6 +172,16 @@ class List(Pipeable):
 
 
 class Tuple(Pipeable):
+    '''Tuple checker
+
+    :param items: a sequence of an alias, any callable or covador.schema.item.
+
+    ::
+
+        t = Tuple((int, List(str.lower)))
+        t(('10', 'BOO')) -> [10, ['b', 'o', 'o']]
+    '''
+
     def __init__(self, items):
         self.items = [get_item(r) for r in items]
 
@@ -89,6 +203,10 @@ class Tuple(Pipeable):
 
 
 class ListMap(Map):
+    '''Checker for dicts with list values
+
+    Can be used as root schema for result of pasrsing query string.
+    '''
     def get(self, data, field):
         if field.multi:
             return data[field.source_key]
@@ -97,6 +215,18 @@ class ListMap(Map):
 
 
 class Int(Pipeable):
+    '''Integer checker
+
+    :param base: numeric base to convert from strings, default is 10
+
+    ::
+
+        Int()('10') -> 10
+
+        Int(2)('10') -> 2
+
+        Int(16)('10') -> 16
+    '''
     def __init__(self, base=None):
         self.base = base or 10
 
@@ -111,6 +241,25 @@ bool_false_values[utype] = tuple(map(ustr, bool_false_values[btype]))
 
 
 class Bool(Pipeable):
+    '''Boolean checker
+
+    If source data is string (or bytes) returns ``False`` for
+    ``false``, ``0``, ``no``, ``n``, ``f`` and empty values.
+
+    For other types returns coercion to bool.
+
+    ::
+
+        Bool()('NO') -> False
+
+        Bool()([]) -> False
+
+        Bool()(0) -> False
+
+        Bool()('1') -> True
+
+        Bool()([None]) -> True
+    '''
     def __call__(self, data):
         dtype = type(data)
         if dtype is btype or dtype is utype:
@@ -236,14 +385,15 @@ url = Str() | regex(URL_REGEX)
 uuid = Str() | regex(r"(?i)^(?:urn:uuid:)?\{?[a-f0-9]{8}(?:-?[a-f0-9]{4}){3}-?[a-f0-9]{12}\}?$")
 
 
-TYPES.update({
+TYPES = {
     dict: lambda it: Map(it),
     list: lambda it: List(it[0]),
     tuple: lambda it: Tuple(it),
-})
+}
 
 
-ALIASES.update({
+ALIASES = {
+    None: lambda it: it,
     int: Int(),
     'int': Int(),
     str: Str(),
@@ -251,4 +401,12 @@ ALIASES.update({
     'bytes': Bytes(),
     bool: Bool(),
     'bool': Bool(),
-})
+}
+
+
+def wrap_type(typ):
+    t = TYPES.get(type(typ))
+    if t:
+        return t(typ)
+
+    return ALIASES.get(typ, typ)

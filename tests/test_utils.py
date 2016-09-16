@@ -1,7 +1,8 @@
 import pytest
 
+from covador import schema
 from covador.types import List, Int
-from covador.utils import parse_qs, wrap_in, merge_dicts, make_validator
+from covador.utils import parse_qs, wrap_in, merge_dicts, make_validator, Pipe
 
 
 def test_parse_qs():
@@ -79,3 +80,18 @@ def test_make_validator_with_error_handler():
         assert foo == 13
 
     assert boo('boo') == 'foo'
+
+
+def test_pipe():
+    assert (Pipe([str, str.strip]) | str.lower)(' AA ') == 'aa'
+    assert (str | Pipe([str.strip, str.lower]))(' AA ') == 'aa'
+
+
+def test_smart_schema():
+    s = schema({'foo': int}, {'foo': str})
+    assert s({'foo': 10}) == {'foo': '10'}
+
+    s = schema(schema(foo=int), schema(foo=str), boo=int)
+    assert s({'foo': 10, 'boo': '20'}) == {'foo': '10', 'boo': 20}
+
+

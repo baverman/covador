@@ -1,8 +1,9 @@
 from setuptools import setup
+import covador
 
 setup(
     name='covador',
-    version='0.7.1',
+    version=covador.version,
     url='https://github.com/baverman/covador/',
     license='MIT',
     author='Anton Bobrov',

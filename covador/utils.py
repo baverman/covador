@@ -22,6 +22,40 @@ def wrap_in(key):
     return lambda val: {key: val}
 
 
+class Pipeable(object):
+    def __or__(self, other):
+        return Pipe([self, other])
+
+    def __ror__(self, other):
+        return Pipe([other, self])
+
+
+class Pipe(Pipeable):
+    def __init__(self, pipe):
+        self.pipe = pipe
+
+    def __call__(self, data):
+        for it in self.pipe:
+            data = it(data)
+        return data
+
+    def __or__(self, other):
+        return Pipe(self.pipe + [other])
+
+    def __ror__(self, other):
+        return Pipe([other] + self.pipe)
+
+
+def make_schema(top_schema):
+    def schema(*args, **kwargs):
+        if args:
+            if len(args) == 1 and not kwargs:
+                return args[0]
+            return top_schema(merge_dicts(*args, **kwargs))
+        return top_schema(kwargs)
+    return schema
+
+
 def make_validator(getter, on_error, top_schema, skip_args=0):
     def validator(*args, **kwargs):
         s = top_schema(*args, **kwargs)
