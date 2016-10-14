@@ -9,7 +9,7 @@ setup(
     author='Anton Bobrov',
     author_email='baverman@gmail.com',
     description='Python data validation with web in-mind',
-    long_description=open('README.rst').read(),
+    long_description=open('README.rst', 'rb').read().decode('utf-8'),
     packages=['covador'],
     include_package_data=True,
     zip_safe=False,
