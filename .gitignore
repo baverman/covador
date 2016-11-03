@@ -7,4 +7,5 @@ Reqs
 /htmlcov
 /.coverage
 TODO
+.idea
 /docs/_build

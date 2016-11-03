@@ -11,11 +11,12 @@ __all__ = ['Map', 'List', 'Tuple', 'Int', 'Str', 'Bool', 'split', 'Range',
 
 class item(object):
     def __init__(self, typ=None, source_key=None, required=True,
-                 default=None, multi=False, **kwargs):
+                 default=None, multi=False, empty_is_none=False, **kwargs):
         self.source_key = source_key
         self.required = required
         self.default = default
         self.multi = multi
+        self.empty_is_none = empty_is_none
         self.__dict__.update(kwargs)
         self.typ = typ and wrap_type(typ)
         self.pipe = []
@@ -37,6 +38,8 @@ class item(object):
         return obj
 
     def __call__(self, data):
+        if self.empty_is_none and data == '':
+            data = None
         if data is None:
             if self.required:
                 raise ValueError('Required item')
