@@ -6,7 +6,7 @@ from .compat import utype, btype, stype, ustr, bstr
 
 __all__ = ['Map', 'List', 'Tuple', 'Int', 'Str', 'Bool', 'split', 'Range',
            'irange', 'frange', 'length', 'enum', 'ListMap', 'Bytes', 'regex',
-           'email', 'url', 'uuid', 'item', 'opt', 'Invalid']
+           'email', 'url', 'uuid', 'item', 'opt', 'nopt', 'Invalid']
 
 
 class item(object):
@@ -57,6 +57,10 @@ class item(object):
 
 
 def opt(*args, **kwargs):
+    return item(*args, empty_is_none=True, required=False, **kwargs)
+
+
+def nopt(*args, **kwargs):
     return item(*args, required=False, **kwargs)
 
 

@@ -58,11 +58,17 @@ def test_item_pipe():
 
 
 def test_item_empty():
-    s = opt(int, empty_is_none=True, default=10)
-    assert s('') == 10
-
     with pytest.raises(ValueError):
         item(empty_is_none=True)('')
+
+
+def test_opt_empty():
+    s = opt(int, default=10)
+    assert s('') == 10
+
+    s = nopt(int)
+    with pytest.raises(ValueError):
+        s('')
 
 
 def test_int():
