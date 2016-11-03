@@ -70,6 +70,9 @@ def test_opt_empty():
     with pytest.raises(ValueError):
         s('')
 
+    assert repr(opt()('')) == 'None'
+    assert repr(opt()(b'')) == 'None'
+
 
 def test_int():
     assert Int()(10) == 10

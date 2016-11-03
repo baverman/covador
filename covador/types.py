@@ -38,8 +38,8 @@ class item(object):
         return obj
 
     def __call__(self, data):
-        if self.empty_is_none and data == '':
-            data = None
+        if self.empty_is_none:
+            data = data or None
         if data is None:
             if self.required:
                 raise ValueError('Required item')
