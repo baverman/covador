@@ -57,6 +57,23 @@ def test_item_pipe():
     assert (int | item())('10') == 10
 
 
+def test_item_empty():
+    with pytest.raises(ValueError):
+        item(empty_is_none=True)('')
+
+
+def test_opt_empty():
+    s = opt(int, default=10)
+    assert s('') == 10
+
+    s = nopt(int)
+    with pytest.raises(ValueError):
+        s('')
+
+    assert repr(opt()('')) == 'None'
+    assert repr(opt()(b'')) == 'None'
+
+
 def test_int():
     assert Int()(10) == 10
     assert Int()(u'10') == 10

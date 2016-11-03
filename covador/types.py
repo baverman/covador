@@ -6,16 +6,17 @@ from .compat import utype, btype, stype, ustr, bstr
 
 __all__ = ['Map', 'List', 'Tuple', 'Int', 'Str', 'Bool', 'split', 'Range',
            'irange', 'frange', 'length', 'enum', 'ListMap', 'Bytes', 'regex',
-           'email', 'url', 'uuid', 'item', 'opt', 'Invalid']
+           'email', 'url', 'uuid', 'item', 'opt', 'nopt', 'Invalid']
 
 
 class item(object):
     def __init__(self, typ=None, source_key=None, required=True,
-                 default=None, multi=False, **kwargs):
+                 default=None, multi=False, empty_is_none=False, **kwargs):
         self.source_key = source_key
         self.required = required
         self.default = default
         self.multi = multi
+        self.empty_is_none = empty_is_none
         self.__dict__.update(kwargs)
         self.typ = typ and wrap_type(typ)
         self.pipe = []
@@ -37,6 +38,8 @@ class item(object):
         return obj
 
     def __call__(self, data):
+        if self.empty_is_none:
+            data = data or None
         if data is None:
             if self.required:
                 raise ValueError('Required item')
@@ -54,6 +57,10 @@ class item(object):
 
 
 def opt(*args, **kwargs):
+    return item(*args, empty_is_none=True, required=False, **kwargs)
+
+
+def nopt(*args, **kwargs):
     return item(*args, required=False, **kwargs)
 
 
