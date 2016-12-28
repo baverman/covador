@@ -1,5 +1,7 @@
 import pytest
 
+import asyncio
+
 from aiohttp import web
 from covador.aiohttp import form
 from covador.aiohttp import m_form
@@ -34,25 +36,29 @@ def cli(loop, test_client):
     return loop.run_until_complete(test_client(app))
 
 
-async def test_get_qs(cli):
-    response = await cli.get('/', params={'boo': 5})
+@asyncio.coroutine
+def test_get_qs(cli):
+    response = yield from cli.get('/', params={'boo': 5})
     assert response.status == 200
-    assert await response.text() == 'Hello, world 5'
+    assert (yield from response.text()) == 'Hello, world 5'
 
 
-async def test_get_form(cli):
-    response = await cli.post('/', data={'boo': 5})
+@asyncio.coroutine
+def test_get_form(cli):
+    response = yield from cli.post('/', data={'boo': 5})
     assert response.status == 200
-    assert await response.text() == 'Hello, world 5'
+    assert (yield from response.text()) == 'Hello, world 5'
 
 
-async def test_m_query_string(cli):
-    response = await cli.get('/cbv/', params={'boo': 5})
+@asyncio.coroutine
+def test_m_query_string(cli):
+    response = yield from cli.get('/cbv/', params={'boo': 5})
     assert response.status == 200
-    assert await response.text() == 'Hello, world 5'
+    assert (yield from response.text()) == 'Hello, world 5'
 
 
-async def test_m_form(cli):
-    response = await cli.post('/cbv/', data={'boo': 5})
+@asyncio.coroutine
+def test_m_form(cli):
+    response = yield from cli.post('/cbv/', data={'boo': 5})
     assert response.status == 200
-    assert await response.text() == 'Hello, world 5'
+    assert (yield from response.text()) == 'Hello, world 5'
