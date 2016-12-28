@@ -12,21 +12,25 @@ from covador.aiohttp import m_query_string
 @pytest.fixture
 def cli(loop, test_client):
     @form(boo=int)
-    async def hello_post(request, boo):
+    @asyncio.coroutine
+    def hello_post(request, boo):
         return web.Response(text='Hello, world {}'.format(boo))
 
     @query_string(boo=int)
-    async def hello_get(request, boo):
+    @asyncio.coroutine
+    def hello_get(request, boo):
         return web.Response(text='Hello, world {}'.format(boo))
 
     class HelloView(web.View):
 
         @m_query_string(boo=int)
-        async def get(self, boo):
+        @asyncio.coroutine
+        def get(self, boo):
             return web.Response(text='Hello, world {}'.format(boo))
 
         @m_form(boo=int)
-        async def post(self, boo):
+        @asyncio.coroutine
+        def post(self, boo):
             return web.Response(text='Hello, world {}'.format(boo))
 
     app = web.Application(loop=loop)
