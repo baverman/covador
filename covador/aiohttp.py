@@ -31,9 +31,11 @@ def get_form(request):
 
 schema = make_schema(ListMap)
 
+
 def make_validator(getter, on_error, top_schema, skip_args=0):
     def validator(*args, **kwargs):
         s = top_schema(*args, **kwargs)
+
         def decorator(func):
             @wraps(func)
             @coroutine
@@ -63,12 +65,16 @@ _query_string = lambda request, *_args, **_kwargs: get_qs(request)
 _form = lambda request, *_args, **_kwargs: get_form(request)
 _rparams = lambda *_args, **kwargs: kwargs
 
+_m_query_string = lambda self, *_args, **_kwargs: get_qs(self.request)
+_m_form = lambda self, *_args, **_kwargs: get_form(self.request)
+_m_rparams = lambda *_args, **kwargs: kwargs
+
 query_string = make_validator(_query_string, on_error, schema)
 form = make_validator(_form, on_error, schema)
 params = make_validator(_params, on_error, schema)
 rparams = make_validator(_rparams, on_error, schema)
 
-m_query_string = make_validator(_query_string, on_error, schema, 1)
-m_form = make_validator(_form, on_error, schema, 1)
-m_params = make_validator(_params, on_error, schema, 1)
-m_rparams = make_validator(_rparams, on_error, schema, 1)
+m_query_string = make_validator(_m_query_string, on_error, schema)
+m_form = make_validator(_m_form, on_error, schema)
+m_params = make_validator(_m_rparams, on_error, schema)
+m_rparams = make_validator(_m_rparams, on_error, schema)
