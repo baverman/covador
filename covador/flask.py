@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from flask import request
 from werkzeug.exceptions import BadRequest
 
-from . import ListMap, make_schema, make_validator
+from . import ListMap, make_schema, make_validator, schema as sschema
 from .utils import merge_dicts, parse_qs
 
 
@@ -32,8 +32,10 @@ _query_string = lambda *_args, **_kwargs: get_qs()
 _form = lambda *_args, **_kwargs: get_form()
 _params = lambda *_args, **_kwargs: merge_dicts(get_qs(), get_form())
 _rparams = lambda *_args, **kwargs: kwargs
+_json = lambda *_args, **_kwargs: request.get_json(True)
 
 query_string = make_validator(_query_string, on_error, schema)
 form = make_validator(_form, on_error, schema)
 params = make_validator(_params, on_error, schema)
 rparams = make_validator(_rparams, on_error, schema)
+json_body = make_validator(_json, on_error, sschema)
