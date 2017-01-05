@@ -22,6 +22,12 @@ def ustr(data, encoding='latin1'):
 if PY2:  # pragma: no cover
     import __builtin__ as builtins
     import urlparse
+    exec('def reraise(tp, value, tb=None):\n raise tp, value, tb')
 else:  # pragma: no cover
     import builtins
     from urllib import parse as urlparse
+
+    def reraise(tp, value, tb=None):
+        if value.__traceback__ is not tb:
+            raise value.with_traceback(tb)
+        raise value

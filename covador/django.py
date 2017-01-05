@@ -1,12 +1,24 @@
 from __future__ import absolute_import
+from functools import wraps
+import json
 
 from django import http
-from . import ListMap, make_schema, make_validator
+
+from . import ValidationDecorator, list_schema, schema
 from .utils import merge_dicts, parse_qs
+from .errors import error_to_json
 
 
-def on_error(exc):  # pragma: no cover
-    return http.HttpResponseBadRequest(str(exc))
+def error_adapter(func):  # pragma: no cover
+    @wraps(func)
+    def inner(ctx):
+        return func(ctx.args[0], ctx)
+    return inner
+
+
+@error_adapter
+def error_handler(_request, ctx):  # pragma: no cover
+    return http.HttpResponseBadRequest(error_to_json(ctx.exception))
 
 
 def get_qs(request):
@@ -25,18 +37,20 @@ def get_form(request):
         return form
 
 
-schema = make_schema(ListMap)
 _query_string = lambda request, *_args, **_kwargs: get_qs(request)
 _form = lambda request, *_args, **_kwargs: get_form(request)
 _params = lambda request, *_args, **_kwargs: merge_dicts(get_qs(request), get_form(request))
 _rparams = lambda *_args, **kwargs: kwargs
+_json_body = lambda request, *_args, **_kwargs: json.loads(request.body)
 
-query_string = make_validator(_query_string, on_error, schema)
-form = make_validator(_form, on_error, schema)
-params = make_validator(_params, on_error, schema)
-rparams = make_validator(_rparams, on_error, schema)
+query_string = ValidationDecorator(_query_string, error_handler, list_schema)
+form = ValidationDecorator(_form, error_handler, list_schema)
+params = ValidationDecorator(_params, error_handler, list_schema)
+rparams = ValidationDecorator(_rparams, error_handler, list_schema)
+json_body = ValidationDecorator(_json_body, error_handler, schema)
 
-m_query_string = make_validator(_query_string, on_error, schema, 1)
-m_form = make_validator(_form, on_error, schema, 1)
-m_params = make_validator(_params, on_error, schema, 1)
-m_rparams = make_validator(_rparams, on_error, schema, 1)
+m_query_string = ValidationDecorator(_query_string, error_handler, list_schema, 1)
+m_form = ValidationDecorator(_form, error_handler, list_schema, 1)
+m_params = ValidationDecorator(_params, error_handler, list_schema, 1)
+m_rparams = ValidationDecorator(_rparams, error_handler, list_schema, 1)
+m_json_body = ValidationDecorator(_json_body, error_handler, schema, 1)

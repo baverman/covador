@@ -15,8 +15,8 @@ def test_simple():
             query_arguments = {'boo': [b'boo']}
             body_arguments = query_arguments
 
-        @cw.query_string(cw.schema(boo='bytes') | wrap_in('raw'))
-        @cw.query_string(cw.schema(boo=str) | wrap_in('data'))
+        @cw.query_string(cw.list_schema(boo='bytes') | wrap_in('raw'))
+        @cw.query_string(cw.list_schema(boo=str) | wrap_in('data'))
         def get(self, data, raw):
             assert repr(data['boo']) == repr(u'boo')
             assert repr(raw['boo']) == repr(b'boo')

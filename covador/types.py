@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import re
 
-from .utils import Pipeable
+from .utils import Pipeable, clone
 from .compat import utype, btype, stype, ustr, bstr
+from .errors import Invalid
 
 __all__ = ['Map', 'List', 'Tuple', 'Int', 'Str', 'Bool', 'split', 'Range',
            'irange', 'frange', 'length', 'enum', 'ListMap', 'Bytes', 'regex',
@@ -22,10 +23,7 @@ class item(object):
         self.pipe = []
 
     def clone(self):
-        obj = object.__new__(item)
-        obj.__dict__.update(self.__dict__)
-        obj.pipe = obj.pipe[:]
-        return obj
+        return clone(self, pipe=self.pipe[:])
 
     def __or__(self, other):
         obj = self.clone()
@@ -68,13 +66,6 @@ def get_item(it):
     if not isinstance(it, item):
         it = item(it)
     return it
-
-
-class Invalid(ValueError):
-    def __init__(self, errors, clean):
-        self.errors = errors
-        self.clean = clean
-        ValueError.__init__(self, repr(self.errors))
 
 
 class Map(Pipeable):

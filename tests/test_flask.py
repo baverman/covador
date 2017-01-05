@@ -4,6 +4,9 @@ class flask:
     class request:
         pass
 
+    class current_app:
+        pass
+
 class werkzeug:
     class exceptions:
         class BadRequest(Exception):
@@ -29,7 +32,7 @@ def test_get_form():
 
 
 def test_json():
-    request.get_json = staticmethod(lambda *args, **kwargs: {'boo': 10})
+    request.get_data = staticmethod(lambda *args, **kwargs: '{"boo": "10"}')
 
     @json_body(boo=int)
     def test(boo):

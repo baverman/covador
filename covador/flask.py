@@ -1,14 +1,16 @@
 from __future__ import absolute_import
+import json
 
-from flask import request
-from werkzeug.exceptions import BadRequest
+from flask import request, current_app
 
-from . import ListMap, make_schema, make_validator, schema as sschema
+from . import ValidationDecorator, schema, list_schema
 from .utils import merge_dicts, parse_qs
+from .errors import error_to_json
 
 
-def on_error(exc):  # pragma: no cover
-    raise BadRequest(str(exc))
+def error_handler(ctx):  # pragma: no cover
+    return current_app.response_class(error_to_json(ctx.exception),
+                                      mimetype='application/json', status=400)
 
 
 def get_qs():
@@ -27,15 +29,14 @@ def get_form():
         return form
 
 
-schema = make_schema(ListMap)
 _query_string = lambda *_args, **_kwargs: get_qs()
 _form = lambda *_args, **_kwargs: get_form()
 _params = lambda *_args, **_kwargs: merge_dicts(get_qs(), get_form())
 _rparams = lambda *_args, **kwargs: kwargs
-_json = lambda *_args, **_kwargs: request.get_json(True)
+_json = lambda *_args, **_kwargs: json.loads(request.get_data(parse_form_data=False))
 
-query_string = make_validator(_query_string, on_error, schema)
-form = make_validator(_form, on_error, schema)
-params = make_validator(_params, on_error, schema)
-rparams = make_validator(_rparams, on_error, schema)
-json_body = make_validator(_json, on_error, sschema)
+query_string = ValidationDecorator(_query_string, error_handler, list_schema)
+form = ValidationDecorator(_form, error_handler, list_schema)
+params = ValidationDecorator(_params, error_handler, list_schema)
+rparams = ValidationDecorator(_rparams, error_handler, list_schema)
+json_body = ValidationDecorator(_json, error_handler, schema)

@@ -1,6 +1,7 @@
+import sys
 from functools import wraps
 
-from .compat import PY2, ustr, urlparse
+from .compat import PY2, ustr, urlparse, reraise
 
 
 def merge_dicts(*dicts, **kwargs):
@@ -16,6 +17,13 @@ def parse_qs(data):
     if not PY2:  # pragma: no cover py2
         result = {ustr(k): v for k, v in result.items()}
     return result
+
+
+def clone(src, **kwargs):
+    obj = object.__new__(type(src))
+    obj.__dict__.update(src.__dict__)
+    obj.__dict__.update(kwargs)
+    return obj
 
 
 def wrap_in(key):
@@ -46,6 +54,12 @@ class Pipe(Pipeable):
         return Pipe([other] + self.pipe)
 
 
+def pipe(p1, p2):
+    if isinstance(p1, Pipeable) or isinstance(p2, Pipeable):
+        return p1 | p2
+    return Pipe([p1, p2])
+
+
 def make_schema(top_schema):
     def schema(*args, **kwargs):
         if args:
@@ -56,23 +70,61 @@ def make_schema(top_schema):
     return schema
 
 
-def make_validator(getter, on_error, top_schema, skip_args=0):
-    def validator(*args, **kwargs):
-        s = top_schema(*args, **kwargs)
-        def decorator(func):
-            @wraps(func)
-            def inner(*args, **kwargs):
-                data = getter(*args[skip_args:], **kwargs)
-                try:
-                    data = s(data)
-                except Exception as e:
-                    if on_error:
-                        return on_error(e)
-                    else:
-                        raise
+class ErrorContext(object):
+    def __init__(self, args=None, kwargs=None, exc_info=None):
+        self.args = args or ()
+        self.kwargs = kwargs or {}
+        self.exc_info = exc_info or sys.exc_info()
+
+    def reraise(self, exception=None):
+        if exception:
+            reraise(type(exception), exception, self.exc_info[2])
+        else:
+            reraise(self.exc_info[0], self.exc_info[1], self.exc_info[2])
+
+    @property
+    def exception(self):
+        return self.exc_info[1]
+
+
+class Validator(object):
+    def __init__(self, schema, getter, error_handler, skip_args):
+        self.schema = schema
+        self.getter = getter
+        self.error_handler = error_handler
+        self.skip_args = skip_args
+
+    def __call__(self, func):
+        @wraps(func)
+        def inner(*args, **kwargs):
+            sargs = args[self.skip_args:]
+            try:
+                data = self.getter(*sargs, **kwargs)
+                data = self.schema(data)
+            except Exception as e:
+                if self.error_handler:
+                    return self.error_handler(ErrorContext(sargs, kwargs))
                 else:
-                    kwargs.update(data)
-                    return func(*args, **kwargs)
-            return inner
-        return decorator
-    return validator
+                    raise
+            else:
+                kwargs.update(data)
+                return func(*args, **kwargs)
+        return inner
+
+    def __or__(self, other):
+        return clone(self, schema=pipe(self.schema, other))
+
+
+class ValidationDecorator(object):
+    def __init__(self, getter, error_handler, top_schema, skip_args=0):
+        self.getter = getter
+        self.top_schema = top_schema
+        self.skip_args = skip_args
+        self.error_handler = error_handler
+
+    def __call__(self, *args, **kwargs):
+        return Validator(self.top_schema(*args, **kwargs), self.getter,
+                         self.error_handler, self.skip_args)
+
+    def on_error(self, handler):
+        return clone(self, error_handler=handler)

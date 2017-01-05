@@ -2,7 +2,8 @@ import pytest
 
 from covador import schema
 from covador.types import List, Int
-from covador.utils import parse_qs, wrap_in, merge_dicts, make_validator, Pipe
+from covador.utils import (parse_qs, wrap_in, merge_dicts, ValidationDecorator,
+                           Pipe, pipe, ErrorContext)
 
 
 def test_parse_qs():
@@ -27,7 +28,7 @@ def test_merge_dicts():
 def test_make_validator():
     schema = lambda: lambda it: {'foo': it + 2}
     getter = lambda it: it + 1
-    v = make_validator(getter, None, schema)
+    v = ValidationDecorator(getter, None, schema)
 
     @v()
     def boo(arg, foo):
@@ -40,7 +41,7 @@ def test_make_validator():
 def test_make_validator_with_skip():
     schema = lambda: lambda it: {'foo': it + 2}
     getter = lambda it: it + 1
-    v = make_validator(getter, None, schema, 1)
+    v = ValidationDecorator(getter, None, schema, 1)
 
     @v()
     def boo(request, arg, foo):
@@ -54,7 +55,7 @@ def test_make_validator_with_skip():
 def test_make_validator_with_empty_error_handler():
     schema = lambda: Int()
     getter = lambda it: it
-    v = make_validator(getter, None, schema)
+    v = ValidationDecorator(getter, None, schema)
 
     @v()
     def boo(arg, foo):
@@ -67,12 +68,12 @@ def test_make_validator_with_empty_error_handler():
 
 def test_make_validator_with_error_handler():
     def on_error(e):
-        assert str(e) == "invalid literal for int() with base 10: 'boo'"
+        assert str(e.exc_info[1]) == "invalid literal for int() with base 10: 'boo'"
         return 'foo'
 
     schema = lambda: Int()
     getter = lambda it: it
-    v = make_validator(getter, on_error, schema)
+    v = ValidationDecorator(getter, None, schema).on_error(on_error)
 
     @v()
     def boo(arg, foo):
@@ -82,9 +83,26 @@ def test_make_validator_with_error_handler():
     assert boo('boo') == 'foo'
 
 
+def test_validator_with_pipe():
+    getter = lambda it: it
+    params = ValidationDecorator(getter, None, schema)
+    v = params(arg=int) | (lambda r: {'arg': r['arg'] + 10})
+
+    @v
+    def boo(request, arg):
+        boo.called = True
+        assert arg == 11
+
+    boo({'arg': 1})
+    assert boo.called
+
+
 def test_pipe():
     assert (Pipe([str, str.strip]) | str.lower)(' AA ') == 'aa'
     assert (str | Pipe([str.strip, str.lower]))(' AA ') == 'aa'
+    assert pipe(Pipe([str, int]), float).pipe == [str, int, float]
+    assert pipe(float, Pipe([str, int])).pipe == [float, str, int]
+    assert pipe(str, int).pipe == [str, int]
 
 
 def test_smart_schema():
@@ -95,3 +113,18 @@ def test_smart_schema():
     assert s({'foo': 10, 'boo': '20'}) == {'foo': '10', 'boo': 20}
 
 
+def test_error_context():
+    def boo():
+        try:
+            1/0
+        except:
+            return ErrorContext()
+
+    ctx = boo()
+    assert type(ctx.exception) == ZeroDivisionError
+
+    with pytest.raises(ZeroDivisionError):
+        ctx.reraise()
+
+    with pytest.raises(KeyError):
+        ctx.reraise(KeyError('boo'))
