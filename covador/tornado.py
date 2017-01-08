@@ -10,12 +10,12 @@ from .errors import error_to_json
 def error_adapter(func):  # pragma: no cover
     @wraps(func)
     def inner(ctx):
-        return func(ctx, ctx.args[0])
+        return func(ctx.args[0], ctx)
     return inner
 
 
 @error_adapter
-def error_handler(ctx, handler):  # pragma: no cover
+def error_handler(handler, ctx):  # pragma: no cover
     handler.set_status(400)
     handler.finish(error_to_json(ctx.exception))
 

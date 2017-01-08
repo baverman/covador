@@ -101,7 +101,7 @@ class Validator(object):
             try:
                 data = self.getter(*sargs, **kwargs)
                 data = self.schema(data)
-            except Exception as e:
+            except Exception:
                 if self.error_handler:
                     return self.error_handler(ErrorContext(sargs, kwargs))
                 else:
@@ -116,15 +116,16 @@ class Validator(object):
 
 
 class ValidationDecorator(object):
-    def __init__(self, getter, error_handler, top_schema, skip_args=0):
+    def __init__(self, getter, error_handler, top_schema, skip_args=0, validator=None):
         self.getter = getter
         self.top_schema = top_schema
         self.skip_args = skip_args
         self.error_handler = error_handler
+        self.validator = validator or Validator
 
     def __call__(self, *args, **kwargs):
-        return Validator(self.top_schema(*args, **kwargs), self.getter,
-                         self.error_handler, self.skip_args)
+        return self.validator(self.top_schema(*args, **kwargs), self.getter,
+                              self.error_handler, self.skip_args)
 
     def on_error(self, handler):
         return clone(self, error_handler=handler)

@@ -3,21 +3,54 @@ from asyncio import coroutine
 
 from aiohttp.web import Response
 
-from . import ListMap, make_schema
-from .utils import merge_dicts, parse_qs
+from . import schema, list_schema
+from .utils import merge_dicts, parse_qs, ValidationDecorator, Validator, ErrorContext
+from .errors import error_to_json
 
 
-def on_error(exc):  # pragma: no cover
-    return Response(text=str(exc), status=400)
+class AsyncValidator(Validator):
+    def __call__(self, func):
+        @wraps(func)
+        @coroutine
+        def inner(*args, **kwargs):
+            sargs = args[self.skip_args:]
+            try:
+                data = (yield from self.getter(*sargs, **kwargs))
+                data = self.schema(data)
+            except Exception:  # pragma: no cover
+                if self.error_handler:
+                    return self.error_handler(ErrorContext(sargs, kwargs))
+                else:
+                    raise
+            else:
+                kwargs.update(data)
+                return (yield from func(*args, **kwargs))
+        return inner
 
 
-@coroutine
+def error_adapter(func):  # pragma: no cover
+    @wraps(func)
+    def inner(ctx):
+        return func(get_request(ctx.args[0]), ctx)
+    return inner
+
+
+@error_adapter
+def error_handler(_request, ctx):  # pragma: no cover
+    return Response(body=error_to_json(ctx.exception), status=400,
+                    content_type='application/json')
+
+
 def get_qs(request):
     try:
         return request['_covador_qs']
     except KeyError:
         qs = request['_covador_qs'] = parse_qs(request.query_string or '')
         return qs
+
+
+def get_request(obj):
+    return getattr(obj, 'request', obj)
 
 
 @coroutine
@@ -29,31 +62,9 @@ def get_form(request):
         return form
 
 
-schema = make_schema(ListMap)
-
-
-def make_validator(getter, on_error, top_schema, skip_args=0):
-    def validator(*args, **kwargs):
-        s = top_schema(*args, **kwargs)
-
-        def decorator(func):
-            @wraps(func)
-            @coroutine
-            def inner(*args, **kwargs):
-                data = (yield from getter(*args[skip_args:], **kwargs))
-                try:
-                    data = s(data)
-                except Exception as e:  # pragma: no cover
-                    if on_error:
-                        return on_error(e)
-                    else:
-                        raise
-                else:
-                    kwargs.update(data)
-                    return (yield from func(*args, **kwargs))
-            return inner
-        return decorator
-    return validator
+@coroutine
+def get_json(request):
+    return (yield from request.json())
 
 
 @coroutine
@@ -61,20 +72,13 @@ def _params(request, *_args, **_kwargs):  # pragma: no cover
     return merge_dicts((yield from get_qs(request)), (yield from get_form(request)))
 
 
-_query_string = lambda request, *_args, **_kwargs: get_qs(request)
-_form = lambda request, *_args, **_kwargs: get_form(request)
+_query_string = lambda request, *_args, **_kwargs: get_qs(get_request(request))
+_form = lambda request, *_args, **_kwargs: get_form(get_request(request))
 _rparams = lambda *_args, **kwargs: kwargs
+_json_body = lambda request, *_args, **_kwargs: get_json(get_request(request))
 
-_m_query_string = lambda self, *_args, **_kwargs: get_qs(self.request)
-_m_form = lambda self, *_args, **_kwargs: get_form(self.request)
-_m_rparams = lambda *_args, **kwargs: kwargs
-
-query_string = make_validator(_query_string, on_error, schema)
-form = make_validator(_form, on_error, schema)
-params = make_validator(_params, on_error, schema)
-rparams = make_validator(_rparams, on_error, schema)
-
-m_query_string = make_validator(_m_query_string, on_error, schema)
-m_form = make_validator(_m_form, on_error, schema)
-m_params = make_validator(_m_rparams, on_error, schema)
-m_rparams = make_validator(_m_rparams, on_error, schema)
+query_string = ValidationDecorator(_query_string, error_handler, list_schema)
+form = ValidationDecorator(_form, error_handler, list_schema, validator=AsyncValidator)
+params = ValidationDecorator(_params, error_handler, list_schema, validator=AsyncValidator)
+rparams = ValidationDecorator(_rparams, error_handler, list_schema)
+json_body = ValidationDecorator(_json_body, error_handler, schema, validator=AsyncValidator)
