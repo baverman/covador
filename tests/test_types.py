@@ -231,5 +231,7 @@ def test_regex():
     assert regex('boo')('boo') == 'boo'
     assert regex('boo')('fooboofoo') == 'fooboofoo'
 
-    with pytest.raises(RegexException):
+    with pytest.raises(RegexException) as ei:
         assert regex('^boo$')('fooboofoo')
+
+    assert str(ei.value) == 'Mismatch "fooboofoo" for "^boo$"'

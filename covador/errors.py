@@ -55,7 +55,7 @@ class RegexException(ValueError):
         self._regex = regex
 
     def __str__(self):
-        return 'Mismatch {} for {}'.format(self._value, self._regex)
+        return 'Mismatch "{}" for "{}"'.format(self._value, self._regex.pattern)
 
 
 def error_to_dict(exc):
