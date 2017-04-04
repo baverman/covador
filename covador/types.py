@@ -3,11 +3,12 @@ import re
 
 from .utils import Pipeable, clone
 from .compat import utype, btype, stype, ustr, bstr
-from .errors import Invalid
+from .errors import Invalid, RequiredExcepion, RangeException, RegexException, LengthException, EnumException
 
 __all__ = ['Map', 'List', 'Tuple', 'Int', 'Str', 'Bool', 'split', 'Range',
            'irange', 'frange', 'length', 'enum', 'ListMap', 'Bytes', 'regex',
-           'email', 'url', 'uuid', 'item', 'opt', 'nopt', 'Invalid']
+           'email', 'url', 'uuid', 'item', 'opt', 'nopt', 'Invalid', 'RequiredExcepion',
+           'RangeException', 'RegexException', 'LengthException', 'EnumException']
 
 
 class item(object):
@@ -40,7 +41,7 @@ class item(object):
             data = data or None
         if data is None:
             if self.required:
-                raise ValueError('Required item')
+                raise RequiredExcepion()
             else:
                 return self.default
         else:
@@ -329,7 +330,7 @@ class enum(Pipeable):
 
     def __call__(self, data):
         if data not in self.choices:
-            raise ValueError('{} not in {}'.format(repr(data), self.choices_str))
+            raise EnumException(data, self.choices_str)
 
         return data
 
@@ -342,9 +343,9 @@ class length(Pipeable):
     def __call__(self, data):
         size = len(data)
         if self.min is not None and size < self.min:
-            raise ValueError('Length of {} is less then {}'.format(size, self.min))
+            raise LengthException(data, min=self.min)
         if self.max is not None and size > self.max:
-            raise ValueError('Length of {} is greater then {}'.format(size, self.max))
+            raise LengthException(data, max=self.max)
         return data
 
 
@@ -355,9 +356,9 @@ class Range(Pipeable):
 
     def __call__(self, data):
         if self.min is not None and data < self.min:
-            raise ValueError('{} is less then {}'.format(data, self.min))
+            raise RangeException(data, min=self.min)
         if self.max is not None and data > self.max:
-            raise ValueError('{} is greater then {}'.format(data, self.max))
+            raise RangeException(data, max=self.max)
         return data
 
 
@@ -371,7 +372,7 @@ class regex(Pipeable):
 
     def __call__(self, data):
         if not self.re.search(data):
-            raise ValueError('Mismatch')
+            raise RegexException(data, self.re)
         return data
 
 

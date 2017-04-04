@@ -51,14 +51,14 @@ def test_item_pipe():
     s = opt(default='20') | int
     assert s(None) == '20'
 
-    with pytest.raises(ValueError):
+    with pytest.raises(RequiredExcepion):
         item()(None)
 
     assert (int | item())('10') == 10
 
 
 def test_item_empty():
-    with pytest.raises(ValueError):
+    with pytest.raises(RequiredExcepion):
         item(empty_is_none=True)('')
 
 
@@ -111,19 +111,19 @@ def test_split():
 def test_enum():
     assert enum(1, 2)(1) == 1
 
-    with pytest.raises(ValueError) as ei:
+    with pytest.raises(EnumException) as ei:
         enum(1, 2)(3)
     assert str(ei.value) == '3 not in [1, 2]'
 
     assert enum(['boo', 'foo'])('boo') == 'boo'
 
-    with pytest.raises(ValueError) as ei:
+    with pytest.raises(EnumException) as ei:
         enum(['boo', 'foo'])('bar')
     assert str(ei.value) == "'bar' not in ['boo', 'foo']"
 
 
 def test_split_enum():
-    with pytest.raises(ValueError) as ei:
+    with pytest.raises(Invalid) as ei:
         split(enum('boo', 'foo'))('boo, bar, foo')
 
     e = ei.value
@@ -139,11 +139,11 @@ def test_int_range():
     assert r(0) == 0
     assert r(10) == 10
 
-    with pytest.raises(ValueError) as ei:
+    with pytest.raises(RangeException) as ei:
         assert r(-1)
     assert str(ei.value) == '-1 is less then 0'
 
-    with pytest.raises(ValueError) as ei:
+    with pytest.raises(RangeException) as ei:
         assert r(11)
     assert str(ei.value) == '11 is greater then 10'
 
@@ -154,7 +154,7 @@ def test_float_range():
     assert r(0) == 0
     assert r(10) == 10
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(RangeException) as e:
         assert r(-1)
 
     assert str(e.value) == '-1.0 is less then 0'
@@ -166,11 +166,11 @@ def test_length():
     assert l([1]) == [1]
     assert l((1, 2, 3)) == (1, 2, 3)
 
-    with pytest.raises(ValueError) as ei:
+    with pytest.raises(LengthException) as ei:
         assert l('')
     assert str(ei.value) == 'Length of 0 is less then 1'
 
-    with pytest.raises(ValueError) as ei:
+    with pytest.raises(LengthException) as ei:
         assert l('1234')
     assert str(ei.value) == 'Length of 4 is greater then 3'
 
@@ -231,5 +231,5 @@ def test_regex():
     assert regex('boo')('boo') == 'boo'
     assert regex('boo')('fooboofoo') == 'fooboofoo'
 
-    with pytest.raises(ValueError):
+    with pytest.raises(RegexException):
         assert regex('^boo$')('fooboofoo')
