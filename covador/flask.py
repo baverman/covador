@@ -6,6 +6,7 @@ from flask import request, current_app
 from . import ValidationDecorator, schema, list_schema
 from .utils import merge_dicts, parse_qs
 from .errors import error_to_json
+from .compat import ustr
 
 
 def error_handler(ctx):  # pragma: no cover
@@ -33,7 +34,7 @@ _query_string = lambda *_args, **_kwargs: get_qs()
 _form = lambda *_args, **_kwargs: get_form()
 _params = lambda *_args, **_kwargs: merge_dicts(get_qs(), get_form())
 _rparams = lambda *_args, **kwargs: kwargs
-_json = lambda *_args, **_kwargs: json.loads(request.get_data(parse_form_data=False))
+_json = lambda *_args, **_kwargs: json.loads(ustr(request.get_data(parse_form_data=False), 'utf-8'))
 
 query_string = ValidationDecorator(_query_string, error_handler, list_schema)
 form = ValidationDecorator(_form, error_handler, list_schema)

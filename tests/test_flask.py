@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sys
 
 class flask:
@@ -32,11 +33,12 @@ def test_get_form():
 
 
 def test_json():
-    request.get_data = staticmethod(lambda *args, **kwargs: '{"boo": "10"}')
+    request.get_data = staticmethod(lambda *args, **kwargs: u'{"boo": "10", "foo": "утф"}'.encode('utf-8'))
 
-    @json_body(boo=int)
-    def test(boo):
+    @json_body(boo=int, foo=str)
+    def test(boo, foo):
         assert boo == 10
+        assert foo == u'утф'
         test.called = True
 
     test()
