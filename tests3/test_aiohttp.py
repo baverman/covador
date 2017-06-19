@@ -1,78 +1,124 @@
 import json
 import asyncio
-import pytest
+import multidict
+import yarl
 
-from aiohttp import web
+from functools import wraps
+from aiohttp import web, streams
 from covador.aiohttp import form, query_string, json_body
 
 
-@pytest.fixture
-def cli(loop, test_client):
-    @form(boo=int)
-    @asyncio.coroutine
-    def hello_post(request, boo):
-        return web.Response(text='Hello, world {}'.format(boo))
+@form(boo=int)
+@asyncio.coroutine
+def hello_post(request, boo):
+    return web.Response(text='Hello, world {}'.format(boo))
 
-    @json_body(boo=int)
-    @asyncio.coroutine
-    def hello_json(request, boo):
-        return web.Response(text='Hello, world {}'.format(boo))
 
+@json_body(boo=int)
+@asyncio.coroutine
+def hello_json(request, boo):
+    return web.Response(text='Hello, world {}'.format(boo))
+
+
+@query_string(boo=int)
+@asyncio.coroutine
+def hello_get(request, boo):
+    return web.Response(text='Hello, world {}'.format(boo))
+
+
+class HelloView(web.View):
     @query_string(boo=int)
     @asyncio.coroutine
-    def hello_get(request, boo):
+    def get(self, boo):
         return web.Response(text='Hello, world {}'.format(boo))
 
-    class HelloView(web.View):
-
-        @query_string(boo=int)
-        @asyncio.coroutine
-        def get(self, boo):
-            return web.Response(text='Hello, world {}'.format(boo))
-
-        @form(boo=int)
-        @asyncio.coroutine
-        def post(self, boo):
-            return web.Response(text='Hello, world {}'.format(boo))
-
-    app = web.Application(loop=loop)
-    app.router.add_get('/', hello_get)
-    app.router.add_post('/', hello_post)
-    app.router.add_route('*', '/cbv/', HelloView)
-    app.router.add_post('/json/', hello_json)
-    return loop.run_until_complete(test_client(app))
+    @form(boo=int)
+    @asyncio.coroutine
+    def post(self, boo):
+        return web.Response(text='Hello, world {}'.format(boo))
 
 
-@asyncio.coroutine
-def test_get_qs(cli):
-    response = yield from cli.get('/', params={'boo': 5})
-    assert response.status == 200
-    assert (yield from response.text()) == 'Hello, world 5'
+class Message:
+    def __init__(self, method, path):
+        self.method = method
+        self.path = path
+        self.headers = multidict.CIMultiDict()
+        self.version = '1.1'
+        self.url = yarl.URL(path)
 
 
-@asyncio.coroutine
-def test_get_form(cli):
-    response = yield from cli.post('/', data={'boo': 5})
-    assert response.status == 200
-    assert (yield from response.text()) == 'Hello, world 5'
+class Protocol:
+    transport = None
+
+
+def make_request(method, path, content=None):
+    s = streams.StreamReader()
+    if content:
+        s.feed_data(content)
+        s.feed_eof()
+
+    return web.Request(Message(method, path), s, Protocol, None, None, None)
 
 
 @asyncio.coroutine
-def test_get_json(cli):
-    response = yield from cli.post('/json/', data=json.dumps({'boo': 5}))
+def call(response):
+    if asyncio.iscoroutine(response):
+        return (yield from response)
+    else:
+        return response
+
+
+def with_loop(func):
+    @wraps(func)
+    def inner():
+        asyncio.get_event_loop().run_until_complete(asyncio.coroutine(func)())
+    return inner
+
+
+@with_loop
+def test_get_qs():
+    response = yield from call(hello_get(make_request('GET', '/?boo=5')))
     assert response.status == 200
-    assert (yield from response.text()) == 'Hello, world 5'
+    assert response.text == 'Hello, world 5'
 
 
-@asyncio.coroutine
-def test_m_query_string(cli):
-    response = yield from cli.get('/cbv/', params={'boo': 5})
+@with_loop
+def test_error_get_qs():
+    response = yield from call(hello_get(make_request('GET', '/?boo=foo')))
+    assert response.status == 400
+    assert json.loads(response.text) == {
+        'details': {
+            'boo': "invalid literal for int() with base 10: 'foo'"
+        },
+        'error': 'bad-request'
+    }
+
+
+@with_loop
+def test_get_form():
+    response = yield from call(hello_post(make_request('POST', '/', b'boo=5')))
     assert response.status == 200
-    assert (yield from response.text()) == 'Hello, world 5'
+    assert response.text == 'Hello, world 5'
 
 
-@asyncio.coroutine
-def test_m_form(cli):
-    response = yield from cli.post('/cbv/', data={'boo': 5})
+@with_loop
+def test_get_json():
+    response = yield from call(hello_json(make_request('POST', '/', b'{"boo": 5}')))
     assert response.status == 200
-    assert (yield from response.text()) == 'Hello, world 5'
+    assert response.text == 'Hello, world 5'
+
+
+@with_loop
+def test_m_query_string():
+    v = HelloView(make_request('GET', '/?boo=5'))
+    response = yield from call(v.get())
+    assert response.status == 200
+    assert response.text == 'Hello, world 5'
+
+
+@with_loop
+def test_m_form():
+    v = HelloView(make_request('GET', '', b'boo=5'))
+    response = yield from call(v.post())
+    assert response.status == 200
+    assert response.text == 'Hello, world 5'

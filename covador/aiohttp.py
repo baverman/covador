@@ -28,7 +28,7 @@ class AsyncValidator(Validator):
         return inner
 
 
-def error_adapter(func):  # pragma: no cover
+def error_adapter(func):
     @wraps(func)
     def inner(ctx):
         return func(get_request(ctx.args[0]), ctx)
