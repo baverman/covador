@@ -3,7 +3,7 @@ import pytest
 from covador import schema
 from covador.types import List, Int
 from covador.utils import (parse_qs, wrap_in, merge_dicts, ValidationDecorator,
-                           Pipe, pipe, ErrorContext)
+                           Pipe, pipe, ErrorContext, dpass)
 
 
 def test_parse_qs():
@@ -86,9 +86,8 @@ def test_make_validator_with_error_handler():
 def test_validator_with_pipe():
     getter = lambda it: it
     params = ValidationDecorator(getter, None, schema)
-    v = params(arg=int) | (lambda r: {'arg': r['arg'] + 10})
 
-    @v
+    @dpass(params(arg=int) | (lambda r: {'arg': r['arg'] + 10}))
     def boo(request, arg):
         boo.called = True
         assert arg == 11

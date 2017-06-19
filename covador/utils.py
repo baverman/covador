@@ -70,6 +70,26 @@ def make_schema(top_schema):
     return schema
 
 
+def dpass(value):
+    """Allows complex inline expressions in decorator
+
+    For example::
+
+        @dpass(params(arg=int) | (lambda r: {'arg': r['arg'] + 10}))
+        def boo(request, arg):
+            pass
+
+    Is equivalent of::
+
+        d = params(arg=int) | (lambda r: {'arg': r['arg'] + 10})
+
+        @d
+        def boo(request, arg):
+            pass
+    """
+    return value
+
+
 class ErrorContext(object):
     def __init__(self, args=None, kwargs=None, exc_info=None):
         self.args = args or ()

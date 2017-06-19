@@ -8,6 +8,8 @@ dev
 * [Feature] `dest_key` parameter for `item`, it controls destination
   key value for Map as `source_key` controls source key value.
 
+* [Feature] `dpass` decorator helper allows use complex expression inline.
+
 0.9.1
 =====
 
