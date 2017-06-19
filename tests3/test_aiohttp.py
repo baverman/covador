@@ -5,7 +5,7 @@ import yarl
 
 from functools import wraps
 from aiohttp import web, streams
-from covador.aiohttp import form, query_string, json_body
+from covador.aiohttp import form, query_string, json_body, params
 
 
 @form(boo=int)
@@ -23,6 +23,12 @@ def hello_json(request, boo):
 @query_string(boo=int)
 @asyncio.coroutine
 def hello_get(request, boo):
+    return web.Response(text='Hello, world {}'.format(boo))
+
+
+@params(boo=int)
+@asyncio.coroutine
+def hello_getpost(request, boo):
     return web.Response(text='Hello, world {}'.format(boo))
 
 
@@ -99,6 +105,25 @@ def test_get_form():
     response = yield from call(hello_post(make_request('POST', '/', b'boo=5')))
     assert response.status == 200
     assert response.text == 'Hello, world 5'
+
+
+@with_loop
+def test_getpost():
+    response = yield from call(hello_getpost(make_request('POST', '/', b'boo=5')))
+    assert response.status == 200
+    assert response.text == 'Hello, world 5'
+
+
+@with_loop
+def test_error_get_form():
+    response = yield from call(hello_post(make_request('POST', '/', b'boo=foo')))
+    assert response.status == 400
+    assert json.loads(response.text) == {
+        'details': {
+            'boo': "invalid literal for int() with base 10: b'foo'"
+        },
+        'error': 'bad-request'
+    }
 
 
 @with_loop

@@ -17,10 +17,10 @@ class AsyncValidator(Validator):
             try:
                 data = (yield from self.getter(*sargs, **kwargs))
                 data = self.schema(data)
-            except Exception:  # pragma: no cover
+            except Exception:
                 if self.error_handler:
                     return self.error_handler(ErrorContext(sargs, kwargs))
-                else:
+                else:  # pragma: no cover
                     raise
             else:
                 kwargs.update(data)
@@ -36,7 +36,7 @@ def error_adapter(func):
 
 
 @error_adapter
-def error_handler(_request, ctx):  # pragma: no cover
+def error_handler(_request, ctx):
     return Response(body=error_to_json(ctx.exception), status=400,
                     content_type='application/json')
 
@@ -68,8 +68,8 @@ def get_json(request):
 
 
 @coroutine
-def _params(request, *_args, **_kwargs):  # pragma: no cover
-    return merge_dicts((yield from get_qs(request)), (yield from get_form(request)))
+def _params(request, *_args, **_kwargs):
+    return merge_dicts(get_qs(request), (yield from get_form(request)))
 
 
 _query_string = lambda request, *_args, **_kwargs: get_qs(get_request(request))

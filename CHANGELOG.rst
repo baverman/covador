@@ -10,6 +10,8 @@ dev
 
 * [Feature] `dpass` decorator helper allows use complex expression inline.
 
+* [Fix] Fixed `covador.aiohttp.params` decorator.
+
 
 0.9.1
 =====
