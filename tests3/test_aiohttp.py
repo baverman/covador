@@ -5,7 +5,9 @@ import yarl
 
 from functools import wraps
 from aiohttp import web, streams
-from covador.aiohttp import form, query_string, json_body, params
+
+from covador import item
+from covador.aiohttp import form, query_string, json_body, params, rparams
 
 
 @form(boo=int)
@@ -24,6 +26,12 @@ def hello_json(request, boo):
 @asyncio.coroutine
 def hello_get(request, boo):
     return web.Response(text='Hello, world {}'.format(boo))
+
+
+@rparams(foo=item(int, source_key='boo'))
+@asyncio.coroutine
+def hello_rget(request, boo, foo):
+    return web.Response(text='Hello, world {}'.format(repr(foo)))
 
 
 @params(boo=int)
@@ -86,6 +94,13 @@ def test_get_qs():
     response = yield from call(hello_get(make_request('GET', '/?boo=5')))
     assert response.status == 200
     assert response.text == 'Hello, world 5'
+
+
+@with_loop
+def test_rget():
+    response = yield from call(hello_rget(make_request('GET', '/'), boo='55'))
+    assert response.status == 200
+    assert response.text == 'Hello, world 55'
 
 
 @with_loop

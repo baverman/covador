@@ -39,5 +39,5 @@ _json = lambda *_args, **_kwargs: json.loads(ustr(request.get_data(parse_form_da
 query_string = ValidationDecorator(_query_string, error_handler, list_schema)
 form = ValidationDecorator(_form, error_handler, list_schema)
 params = ValidationDecorator(_params, error_handler, list_schema)
-rparams = ValidationDecorator(_rparams, error_handler, list_schema)
+rparams = ValidationDecorator(_rparams, error_handler, schema)
 json_body = ValidationDecorator(_json, error_handler, schema)

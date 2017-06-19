@@ -12,6 +12,8 @@ dev
 
 * [Fix] Fixed `covador.aiohttp.params` decorator.
 
+* [Fix] Incorrect schema for `rparams` for all supported frameworks.
+
 
 0.9.1
 =====
