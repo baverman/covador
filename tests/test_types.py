@@ -34,7 +34,13 @@ def test_opt_field():
 
 
 def test_source_key():
-    s = schema(foo=item(int, 'boo'))
+    s = schema(foo=item(int, source_key='boo'))
+    result = s({'boo': '10'})
+    assert result == {'foo': 10}
+
+
+def test_dest_key():
+    s = schema(boo=item(int, dest_key='foo'))
     result = s({'boo': '10'})
     assert result == {'foo': 10}
 

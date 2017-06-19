@@ -1,3 +1,19 @@
+dev
+===
+
+* [Break] Changed argument order for `item`. `default` is on second
+  position now, so one can use `opt(int, 0)` instead `opt(int, default=0)`.
+  Default values is more common case then custom source keys.
+
+* [Feature] `dest_key` parameter for `item`, it controls destination
+  key value for Map as `source_key` controls source key value.
+
+0.9.1
+=====
+
+* [Feature] Exception hierarchy for built-in checkers.
+
+
 0.9.0
 =====
 

@@ -12,9 +12,10 @@ __all__ = ['Map', 'List', 'Tuple', 'Int', 'Str', 'Bool', 'split', 'Range',
 
 
 class item(object):
-    def __init__(self, typ=None, source_key=None, required=True,
-                 default=None, multi=False, empty_is_none=False, **kwargs):
+    def __init__(self, typ=None, default=None, source_key=None, dest_key=None,
+                 required=True, multi=False, empty_is_none=False, **kwargs):
         self.source_key = source_key
+        self.dest_key = dest_key
         self.required = required
         self.default = default
         self.multi = multi
@@ -95,7 +96,9 @@ class Map(Pipeable):
             it = get_item(it)
             if not it.source_key:
                 it.source_key = k
-            self.items[k] = it
+            if not it.dest_key:
+                it.dest_key = k
+            self.items[it.dest_key] = it
 
     def get(self, data, item):
         '''Get corresponding data for item
