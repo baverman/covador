@@ -1,14 +1,14 @@
 dev
 ===
 
-* [Break] Changed argument order for ``item``. ``default`` is on second
-  position now, so one can use ``opt(int, 0)`` instead ``opt(int, default=0)``.
-  Default values is more common case then custom source keys.
+* [Break] Changed argument order for ``item``. ``default`` is on a second
+  position now, so one can use ``opt(int, 0)`` instead of ``opt(int, default=0)``.
+  Default values are more common case then custom source keys.
 
-* [Feature] ``dest`` and ``src`` (alias for ``source_key``) parameter for ``item``,
-  it controls destination and source key value for Map.
+* [Feature] ``dest`` and ``src`` (an alias for ``source_key``) parameters for ``item``,
+  it controls a destination and a source key value for a Map.
 
-* [Feature] ``dpass`` decorator helper allows use complex expression inline.
+* [Feature] ``dpass`` decorator helper allows to use complex expression inline.
 
 * [Fix] Fixed ``covador.aiohttp.params`` decorator.
 
