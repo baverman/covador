@@ -2,6 +2,7 @@ import pytest
 
 from covador import schema
 from covador.types import *
+from covador.errors import error_to_dict
 
 
 def test_existing_field():
@@ -243,20 +244,22 @@ def test_regex():
     assert str(ei.value) == 'Mismatch "fooboofoo" for "^boo$"'
 
 
-def test_opt_groups():
-    s = schema(opt_group(foo=item(str, src='fooo'), baz=str), opt_group(boo=str, baz=str))
+def test_oneof():
+    s = schema(oneof(dict(foo=item(str, src='fooo'), baz=str),
+                     dict(boo=str, baz=str)),
+               bar=opt(str))
 
-    s({'fooo': 'foo', 'baz': 'baz'})
+    assert s({'fooo': 'foo', 'baz': 'baz'}) == {'bar': None, 'baz': u'baz', 'foo': u'foo'}
     s({'boo': 'boo', 'baz': 'baz'})
 
-    with pytest.raises(RequiredExcepion) as ei:
+    with pytest.raises(Invalid) as ei:
         s({})
-    assert str(ei.value) == 'Items baz, boo or baz, fooo are required'
+    err = error_to_dict(ei.value)
+    assert err == {'one of': {0: {'fooo': 'Required item', 'baz': 'Required item'},
+                              1: {'baz': 'Required item', 'boo': 'Required item'}}}
 
-    with pytest.raises(RequiredExcepion) as ei:
-        s({'boo': 'baz'})
-    assert str(ei.value) == 'Items baz, boo or baz, fooo are required'
-
-    with pytest.raises(RequiredExcepion) as ei:
-        s({'fooo': 'foo'})
-    assert str(ei.value) == 'Items baz, boo or baz, fooo are required'
+    with pytest.raises(Invalid) as ei:
+        s({'baz': 'baz'})
+    err = error_to_dict(ei.value)
+    assert err == {'one of': {0: {'fooo': 'Required item'},
+                              1: {'boo': 'Required item'}}}

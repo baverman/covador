@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 
-from .utils import Pipeable, clone, ensure_context, ContexAware, merge_dicts
+from .utils import Pipeable, clone, ensure_context, merge_dicts
 from .compat import utype, btype, stype, ustr, bstr
 from .errors import Invalid, RequiredExcepion, RangeException, RegexException, LengthException, EnumException
 
@@ -9,7 +9,7 @@ __all__ = ['Map', 'List', 'Tuple', 'Int', 'Str', 'Bool', 'split', 'Range',
            'irange', 'frange', 'length', 'enum', 'ListMap', 'Bytes', 'regex',
            'email', 'url', 'uuid', 'item', 'opt', 'nopt', 'Invalid', 'RequiredExcepion',
            'RangeException', 'RegexException', 'LengthException', 'EnumException',
-           'opt_group', 'make_schema']
+           'oneof', 'make_schema']
 
 
 class item(object):
@@ -91,7 +91,10 @@ class Map(Pipeable):
                  'data': item('str', dest='decoded')})
         m({'data': b'data'}) -> {'raw': b'data', 'decoded': u'data'}
     '''
-    def __init__(self, items, opt_group=False):
+    def __init__(self, items):
+        if isinstance(items, Map):
+            items = items.items
+
         self.items = {}
         for k, it in items.items():
             it = get_item(it)
@@ -100,11 +103,6 @@ class Map(Pipeable):
             if not it.dest:
                 it.dest = k
             self.items[it.dest] = it
-
-        if opt_group:
-            self.source_groups = {object(): [it for it in self.items.values()]}
-        else:
-            self.source_groups = {}
 
     def get(self, data, item):
         '''Get corresponding data for item
@@ -117,16 +115,10 @@ class Map(Pipeable):
         '''
         return data.get(item.src)
 
-    def __iter__(self):
-        return iter(self.items.items())
-
     def __call__(self, data):
         errors = []
         result = {}
         get = self.get
-
-        if self.source_groups:
-            self.check_groups(data)
 
         for k, it in self.items.items():
             raw_data = get(data, it)
@@ -139,16 +131,6 @@ class Map(Pipeable):
             raise Invalid(errors, result)
 
         return result
-
-    def group_str(self):
-        return ' or '.join(sorted(', '.join(sorted(it.src for it in group)) for group in self.source_groups.values()))
-
-    def check_groups(self, data):
-        get = self.get
-        if not any(all(v is not None and (not it.empty_is_none or v)
-                       for it, v in ((g, get(data, g)) for g in group))
-                   for group in self.source_groups.values()):
-            raise RequiredExcepion('Items {} are required'.format(self.group_str()))
 
 
 class List(Pipeable):
@@ -430,31 +412,49 @@ def wrap_type(typ):
     return ALIASES.get(typ, typ)
 
 
-def opt_group(**kwargs):
-    for k, v in kwargs.items():
-        v = kwargs[k] = get_item(v)
-        v.required = False
-    return Map(kwargs, True)
+class oneof(object):
+    def __init__(self, *alternatives):
+        self.alternatives = alternatives
+
+    def _adjust(self, typ):
+        self.alternatives = [typ(a) for a in self.alternatives]
+        return self
+
+    def __call__(self, data):
+        errors = []
+        for idx, a in enumerate(self.alternatives):
+            try:
+                result = a(data)
+            except Exception as e:
+                errors.append((idx, e))
+            else:
+                return result
+
+        raise Invalid([('one of', Invalid(errors, data))], data)
 
 
-def merge_groups(maps):
-    result = {}
-    for m in maps:
-        for k, v in getattr(m, 'source_groups', {}).items():
-            result.setdefault(k, []).extend(v)
+class MergedMap(Pipeable):
+    def __init__(self, parts):
+        self.parts = parts
 
-    return result
+    def __call__(self, data):
+        result = {}
+        for p in self.parts:
+            result.update(p(data))
+        return result
 
 
 def make_schema(top_schema):
     def schema(*args, **kwargs):
+        args = [r._adjust(top_schema) if isinstance(r, oneof) else top_schema(r)
+                for r in args]
+
         tail = kwargs.pop('_', None)
         if args:
             if len(args) == 1 and not kwargs:
-                s = top_schema(args[0])
+                s = args[0]
             else:
-                s = top_schema(merge_dicts(*args, **kwargs))
-                s.source_groups = merge_groups(args)
+                s = MergedMap(args + [top_schema(kwargs)])
         else:
             s = top_schema(kwargs)
 

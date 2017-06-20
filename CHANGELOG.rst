@@ -5,6 +5,8 @@ dev
   position now, so one can use ``opt(int, 0)`` instead of ``opt(int, default=0)``.
   Default values are more common case then custom source keys.
 
+* [Feature] ``oneof`` validator to select suitable alternative.
+
 * [Feature] ``dest`` and ``src`` (an alias for ``source_key``) parameters for ``item``,
   it controls a destination and a source key value for a Map.
 
