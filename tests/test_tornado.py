@@ -16,7 +16,7 @@ def test_simple():
             body_arguments = query_arguments
 
         @dpass(query_string(boo='bytes') | wrap_in('raw'))
-        @dpass(query_string(boo=str) | wrap_in('data'))
+        @query_string(boo=str, _=wrap_in('data'))
         def get(self, data, raw):
             assert repr(data['boo']) == repr(u'boo')
             assert repr(raw['boo']) == repr(b'boo')

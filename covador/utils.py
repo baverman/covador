@@ -62,11 +62,19 @@ def pipe(p1, p2):
 
 def make_schema(top_schema):
     def schema(*args, **kwargs):
+        tail = kwargs.pop('_', None)
         if args:
             if len(args) == 1 and not kwargs:
-                return top_schema(args[0])
-            return top_schema(merge_dicts(*args, **kwargs))
-        return top_schema(kwargs)
+                s = top_schema(args[0])
+            else:
+                s = top_schema(merge_dicts(*args, **kwargs))
+        else:
+            s = top_schema(kwargs)
+
+        if tail:
+            return s | tail
+
+        return s
     return schema
 
 

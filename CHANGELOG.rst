@@ -10,6 +10,9 @@ dev
 
 * [Feature] ``dpass`` decorator helper allows to use complex expression inline.
 
+* [Feature] ``_`` keyword argument for schema constructor to attach a validation chain
+  to a resulted schema. Can be used instead of ``dpass``.
+
 * [Fix] Fixed ``covador.aiohttp.params`` decorator.
 
 * [Fix] Incorrect schema for ``rparams`` for all supported frameworks.

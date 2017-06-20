@@ -117,6 +117,9 @@ def test_smart_schema():
     s = schema(schema(foo=int), schema(foo=str), boo=int)
     assert s({'foo': 10, 'boo': '20'}) == {'foo': '10', 'boo': 20}
 
+    s = schema(foo=str, _=lambda r: r['foo'].upper())
+    assert s({'foo': 'aaa'}) == u'AAA'
+
 
 def test_error_context():
     def boo():
