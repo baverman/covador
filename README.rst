@@ -34,7 +34,7 @@ Validation library for processing http endpoint arguments.
 * Support for flask, django, aiohttp and tornado.
 * Simple creating of custom ``query_string``/``form``/``params`` wrappers.
 * Multi dict support via item ``multi`` param.
-* Multi dict keys support via item ``source_key`` param.
+* Multi dict keys support via item ``src`` param.
 * Simple interface for custom validators/processors it's just a callable.
 * Maps, Lists, Tuples, Enums.
 * Validation chains: ``opt(default=[]) | split(separator=' ') | List(int) | (lambda it: it[:10])`` —

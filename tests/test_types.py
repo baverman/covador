@@ -33,14 +33,14 @@ def test_opt_field():
     assert result == {'foo': None, 'boo': 10}
 
 
-def test_source_key():
-    s = schema(foo=item(int, source_key='boo'))
+def test_src():
+    s = schema(foo=item(int, src='boo'))
     result = s({'boo': '10'})
     assert result == {'foo': 10}
 
 
-def test_dest_key():
-    s = schema(boo=item(int, dest_key='foo'))
+def test_dest():
+    s = schema(boo=item(int, dest='foo'))
     result = s({'boo': '10'})
     assert result == {'foo': 10}
 

@@ -1,18 +1,18 @@
 dev
 ===
 
-* [Break] Changed argument order for `item`. `default` is on second
-  position now, so one can use `opt(int, 0)` instead `opt(int, default=0)`.
+* [Break] Changed argument order for ``item``. ``default`` is on second
+  position now, so one can use ``opt(int, 0)`` instead ``opt(int, default=0)``.
   Default values is more common case then custom source keys.
 
-* [Feature] `dest_key` parameter for `item`, it controls destination
-  key value for Map as `source_key` controls source key value.
+* [Feature] ``dest`` and ``src`` (alias for ``source_key``) parameter for ``item``,
+  it controls destination and source key value for Map.
 
-* [Feature] `dpass` decorator helper allows use complex expression inline.
+* [Feature] ``dpass`` decorator helper allows use complex expression inline.
 
-* [Fix] Fixed `covador.aiohttp.params` decorator.
+* [Fix] Fixed ``covador.aiohttp.params`` decorator.
 
-* [Fix] Incorrect schema for `rparams` for all supported frameworks.
+* [Fix] Incorrect schema for ``rparams`` for all supported frameworks.
 
 
 0.9.1
@@ -24,12 +24,12 @@ dev
 0.9.0
 =====
 
-* Drop `covador.aiohttp.m_*` decorators in favor simple query_string/form/etc...
+* Drop ``covador.aiohttp.m_*`` decorators in favor simple query_string/form/etc...
   Support for CBV are kept.
 
 * Added json_body for django, tornado and aiohttp.
 
-* Ability to customize error handler via `.on_error` validator decorator
+* Ability to customize error handler via ``.on_error`` validator decorator
   method:
 
   .. code:: python

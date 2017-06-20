@@ -21,7 +21,7 @@ def test_simple():
             assert repr(data['boo']) == repr(u'boo')
             assert repr(raw['boo']) == repr(b'boo')
 
-        @cw.form(boo=str, raw_boo=item('bytes', source_key='boo'))
+        @cw.form(boo=str, raw_boo=item('bytes', src='boo'))
         def post(self, boo, raw_boo):
             assert repr(boo) == repr(u'boo')
             assert repr(raw_boo) == repr(b'boo')

@@ -28,7 +28,7 @@ def hello_get(request, boo):
     return web.Response(text='Hello, world {}'.format(boo))
 
 
-@rparams(foo=item(int, source_key='boo'))
+@rparams(foo=item(int, src='boo'))
 @asyncio.coroutine
 def hello_rget(request, boo, foo):
     return web.Response(text='Hello, world {}'.format(repr(foo)))

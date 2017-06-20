@@ -12,10 +12,10 @@ __all__ = ['Map', 'List', 'Tuple', 'Int', 'Str', 'Bool', 'split', 'Range',
 
 
 class item(object):
-    def __init__(self, typ=None, default=None, source_key=None, dest_key=None,
+    def __init__(self, typ=None, default=None, source_key=None, src=None, dest=None,
                  required=True, multi=False, empty_is_none=False, **kwargs):
-        self.source_key = source_key
-        self.dest_key = dest_key
+        self.src = source_key or src
+        self.dest = dest
         self.required = required
         self.default = default
         self.multi = multi
@@ -78,27 +78,27 @@ class Map(Pipeable):
 
     If source dict does not contain a key, key value is considered None.
 
-    item can have source_key param to be able to specify source key, by
-    default it equals to field key.
+    item can have src or dest param to be able to specify source or
+    destination key, by default it equals to field key.
     ::
 
         Map({'foo': int})({'foo': '10'}) -> {'foo': 10}
 
         Map({'foo': opt(int)})({}) -> None
 
-        m = Map({'raw': item('bytes', source_key='data'),
-                 'decoded': item('str', source_key='data')})
+        m = Map({'raw': item('bytes', src='data'),
+                 'data': item('str', dest='decoded')})
         m({'data': b'data'}) -> {'raw': b'data', 'decoded': u'data'}
     '''
     def __init__(self, items):
         self.items = {}
         for k, it in items.items():
             it = get_item(it)
-            if not it.source_key:
-                it.source_key = k
-            if not it.dest_key:
-                it.dest_key = k
-            self.items[it.dest_key] = it
+            if not it.src:
+                it.src = k
+            if not it.dest:
+                it.dest = k
+            self.items[it.dest] = it
 
     def get(self, data, item):
         '''Get corresponding data for item
@@ -110,7 +110,7 @@ class Map(Pipeable):
         Subsclasses can override this method to implement map access to more complex
         structures then plain dict
         '''
-        return data[item.source_key]
+        return data[item.src]
 
     def __iter__(self):
         return iter(self.items.items())
@@ -128,7 +128,7 @@ class Map(Pipeable):
             try:
                 result[k] = it(raw_data)
             except Exception as e:
-                errors.append((it.source_key, e))
+                errors.append((it.src, e))
 
         if errors:
             raise Invalid(errors, result)
@@ -211,9 +211,9 @@ class ListMap(Map):
     '''
     def get(self, data, field):
         if field.multi:
-            return data[field.source_key]
+            return data[field.src]
         else:
-            return data[field.source_key][0]
+            return data[field.src][0]
 
 
 class Int(Pipeable):
