@@ -244,12 +244,12 @@ def test_regex():
     assert str(ei.value) == 'Mismatch "fooboofoo" for "^boo$"'
 
 
-def test_oneof():
+def test_oneof_schema():
     s = schema(oneof(dict(foo=item(str, src='fooo'), baz=str),
                      dict(boo=str, baz=str)),
                bar=opt(str))
 
-    assert s({'fooo': 'foo', 'baz': 'baz'}) == {'bar': None, 'baz': u'baz', 'foo': u'foo'}
+    assert s({'fooo': 'foo', 'baz': 'baz'}) == {'bar': None, 'boo': None, 'baz': u'baz', 'foo': u'foo'}
     s({'boo': 'boo', 'baz': 'baz'})
 
     with pytest.raises(Invalid) as ei:
@@ -263,3 +263,9 @@ def test_oneof():
     err = error_to_dict(ei.value)
     assert err == {'one of': {0: {'fooo': 'Required item'},
                               1: {'boo': 'Required item'}}}
+
+
+def test_oneof():
+    s = oneof(Int(), Str())
+    assert s(10) == 10
+    assert s('boo') == u'boo'

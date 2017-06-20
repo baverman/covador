@@ -415,9 +415,14 @@ def wrap_type(typ):
 class oneof(object):
     def __init__(self, *alternatives):
         self.alternatives = alternatives
+        self.blank = None
 
     def _adjust(self, typ):
         self.alternatives = [typ(a) for a in self.alternatives]
+        blank = {}
+        for a in self.alternatives:
+            blank.update((k, None) for k in a.items)
+        self.blank = blank
         return self
 
     def __call__(self, data):
@@ -428,6 +433,10 @@ class oneof(object):
             except Exception as e:
                 errors.append((idx, e))
             else:
+                if self.blank:
+                    blank = self.blank.copy()
+                    blank.update(result)
+                    return blank
                 return result
 
         raise Invalid([('one of', Invalid(errors, data))], data)
