@@ -1,10 +1,11 @@
 import sys
-from functools import wraps
+from functools import wraps, partial
 
 from .compat import PY2, ustr, urlparse, reraise
 
 
 def merge_dicts(*dicts, **kwargs):
+    """Merges dicts and kwargs into one dict"""
     result = {}
     for d in dicts:
         result.update(d)
@@ -13,6 +14,10 @@ def merge_dicts(*dicts, **kwargs):
 
 
 def parse_qs(data):
+    """Helper func to parse query string with py2/py3 compatibility
+
+    Ensures that dict keys are native strings.
+    """
     result = urlparse.parse_qs(data, True)
     if not PY2:  # pragma: no cover py2
         result = {ustr(k): v for k, v in result.items()}
@@ -20,6 +25,7 @@ def parse_qs(data):
 
 
 def clone(src, **kwargs):
+    """Clones object with optionally overridden fields"""
     obj = object.__new__(type(src))
     obj.__dict__.update(src.__dict__)
     obj.__dict__.update(kwargs)
@@ -27,20 +33,47 @@ def clone(src, **kwargs):
 
 
 def wrap_in(key):
+    """Wraps value in dict ``{key: value}``"""
     return lambda val: {key: val}
 
 
+class ContexAware(object):
+    def __call__(self, ctx, data):
+        return data  # pragma: no cover
+
+    def check(self, ctx):
+        pass  # pragma: no cover
+
+
+def ensure_context(ctx, func, right=True):
+    if isinstance(func, ContexAware):  # pragma: no cover
+        assert right, 'Context-aware function must be attached to right side'
+        assert ctx, 'Context needed'
+        func.check(ctx)
+        return partial(func, ctx)
+    return func
+
+
 class Pipeable(object):
+    """Pipeable mixin
+
+    Adds ``|`` operation to class.
+    """
     def __or__(self, other):
-        return Pipe([self, other])
+        return Pipe([self, ensure_context(self, other)], self)
 
     def __ror__(self, other):
-        return Pipe([other, self])
+        return Pipe([ensure_context(self, other, False), self], self)
 
 
 class Pipe(Pipeable):
-    def __init__(self, pipe):
+    """Pipe validator
+
+    Pass data through function list
+    """
+    def __init__(self, pipe, ctx=None):
         self.pipe = pipe
+        self.ctx = None
 
     def __call__(self, data):
         for it in self.pipe:
@@ -48,34 +81,17 @@ class Pipe(Pipeable):
         return data
 
     def __or__(self, other):
-        return Pipe(self.pipe + [other])
+        return Pipe(self.pipe + [ensure_context(self.ctx, other)], self.ctx)
 
     def __ror__(self, other):
-        return Pipe([other] + self.pipe)
+        return Pipe([ensure_context(self.ctx, other, False)] + self.pipe, self.ctx)
 
 
 def pipe(p1, p2):
+    """Joins two pipes"""
     if isinstance(p1, Pipeable) or isinstance(p2, Pipeable):
         return p1 | p2
     return Pipe([p1, p2])
-
-
-def make_schema(top_schema):
-    def schema(*args, **kwargs):
-        tail = kwargs.pop('_', None)
-        if args:
-            if len(args) == 1 and not kwargs:
-                s = top_schema(args[0])
-            else:
-                s = top_schema(merge_dicts(*args, **kwargs))
-        else:
-            s = top_schema(kwargs)
-
-        if tail:
-            return s | tail
-
-        return s
-    return schema
 
 
 def dpass(value):

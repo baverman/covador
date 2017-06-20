@@ -1,4 +1,4 @@
-from .utils import wrap_in, ValidationDecorator, make_schema, dpass
+from .utils import wrap_in, ValidationDecorator, dpass
 from .types import *
 
 version = '0.9.2'

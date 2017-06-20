@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
 import re
 
-from .utils import Pipeable, clone
+from .utils import Pipeable, clone, ensure_context, ContexAware, merge_dicts
 from .compat import utype, btype, stype, ustr, bstr
 from .errors import Invalid, RequiredExcepion, RangeException, RegexException, LengthException, EnumException
 
 __all__ = ['Map', 'List', 'Tuple', 'Int', 'Str', 'Bool', 'split', 'Range',
            'irange', 'frange', 'length', 'enum', 'ListMap', 'Bytes', 'regex',
            'email', 'url', 'uuid', 'item', 'opt', 'nopt', 'Invalid', 'RequiredExcepion',
-           'RangeException', 'RegexException', 'LengthException', 'EnumException']
+           'RangeException', 'RegexException', 'LengthException', 'EnumException',
+           'opt_group', 'make_schema']
 
 
 class item(object):
     def __init__(self, typ=None, default=None, source_key=None, src=None, dest=None,
-                 required=True, multi=False, empty_is_none=False, **kwargs):
+                 required=True, multi=False, empty_is_none=False,  **kwargs):
         self.src = source_key or src
         self.dest = dest
         self.required = required
@@ -29,12 +30,12 @@ class item(object):
 
     def __or__(self, other):
         obj = self.clone()
-        obj.pipe.append(other)
+        obj.pipe.append(ensure_context(self.typ, other))
         return obj
 
     def __ror__(self, other):
         obj = self.clone()
-        obj.pipe.insert(0, other)
+        obj.pipe.insert(0, ensure_context(self.typ, other, False))
         return obj
 
     def __call__(self, data):
@@ -90,7 +91,7 @@ class Map(Pipeable):
                  'data': item('str', dest='decoded')})
         m({'data': b'data'}) -> {'raw': b'data', 'decoded': u'data'}
     '''
-    def __init__(self, items):
+    def __init__(self, items, opt_group=False):
         self.items = {}
         for k, it in items.items():
             it = get_item(it)
@@ -100,17 +101,21 @@ class Map(Pipeable):
                 it.dest = k
             self.items[it.dest] = it
 
+        if opt_group:
+            self.source_groups = {object(): [it for it in self.items.values()]}
+        else:
+            self.source_groups = {}
+
     def get(self, data, item):
         '''Get corresponding data for item
 
         :param data: source data
         :param item: item to get
-        :raise KeyError: if item not found
 
         Subsclasses can override this method to implement map access to more complex
         structures then plain dict
         '''
-        return data[item.src]
+        return data.get(item.src)
 
     def __iter__(self):
         return iter(self.items.items())
@@ -119,12 +124,12 @@ class Map(Pipeable):
         errors = []
         result = {}
         get = self.get
-        for k, it in self.items.items():
-            try:
-                raw_data = get(data, it)
-            except KeyError:
-                raw_data = None
 
+        if self.source_groups:
+            self.check_groups(data)
+
+        for k, it in self.items.items():
+            raw_data = get(data, it)
             try:
                 result[k] = it(raw_data)
             except Exception as e:
@@ -134,6 +139,16 @@ class Map(Pipeable):
             raise Invalid(errors, result)
 
         return result
+
+    def group_str(self):
+        return ' or '.join(sorted(', '.join(sorted(it.src for it in group)) for group in self.source_groups.values()))
+
+    def check_groups(self, data):
+        get = self.get
+        if not any(all(v is not None and (not it.empty_is_none or v)
+                       for it, v in ((g, get(data, g)) for g in group))
+                   for group in self.source_groups.values()):
+            raise RequiredExcepion('Items {} are required'.format(self.group_str()))
 
 
 class List(Pipeable):
@@ -211,9 +226,10 @@ class ListMap(Map):
     '''
     def get(self, data, field):
         if field.multi:
-            return data[field.src]
+            return data.get(field.src)
         else:
-            return data[field.src][0]
+            d = data.get(field.src)
+            return d and d[0] or None
 
 
 class Int(Pipeable):
@@ -412,3 +428,38 @@ def wrap_type(typ):
         return t(typ)
 
     return ALIASES.get(typ, typ)
+
+
+def opt_group(**kwargs):
+    for k, v in kwargs.items():
+        v = kwargs[k] = get_item(v)
+        v.required = False
+    return Map(kwargs, True)
+
+
+def merge_groups(maps):
+    result = {}
+    for m in maps:
+        for k, v in getattr(m, 'source_groups', {}).items():
+            result.setdefault(k, []).extend(v)
+
+    return result
+
+
+def make_schema(top_schema):
+    def schema(*args, **kwargs):
+        tail = kwargs.pop('_', None)
+        if args:
+            if len(args) == 1 and not kwargs:
+                s = top_schema(args[0])
+            else:
+                s = top_schema(merge_dicts(*args, **kwargs))
+                s.source_groups = merge_groups(args)
+        else:
+            s = top_schema(kwargs)
+
+        if tail:
+            return s | tail
+
+        return s
+    return schema

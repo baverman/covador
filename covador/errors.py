@@ -9,53 +9,47 @@ class Invalid(ValueError):
 
 
 class RequiredExcepion(ValueError):
-    def __str__(self):
-        return 'Required item'
+    def __init__(self, message=None):
+        ValueError.__init__(self, message or 'Required item')
 
 
 class EnumException(ValueError):
     def __init__(self, value, enum):
-        self._value = value
-        self._enum = enum
-
-    def __str__(self):
-        return '{} not in {}'.format(repr(self._value), self._enum)
+        self.value = value
+        self.enum = enum
+        ValueError.__init__(self, '{} not in {}'.format(repr(value), enum))
 
 
 class LengthException(ValueError):
     def __init__(self, value, min=None, max=None):
-        self._value = value
-        self._min = min
-        self._max = max
+        self.value = value
+        self.min = min
+        self.max = max
 
-    def __str__(self):
-        size = len(self._value)
-        if self._min is not None:
-            return 'Length of {} is less then {}'.format(size, self._min)
-        if self._max is not None:
-            return 'Length of {} is greater then {}'.format(size, self._max)
+        size = len(value or '')
+        if min is not None:
+            ValueError.__init__(self, 'Length of {} is less then {}'.format(size, min))
+        else:
+            ValueError.__init__(self, 'Length of {} is greater then {}'.format(size, max))
 
 
 class RangeException(ValueError):
     def __init__(self, value, min=None, max=None):
-        self._value = value
-        self._min = min
-        self._max = max
+        self.value = value
+        self.min = min
+        self.max = max
 
-    def __str__(self):
-        if self._min is not None:
-            return '{} is less then {}'.format(self._value, self._min)
-        if self._max is not None:
-            return '{} is greater then {}'.format(self._value, self._max)
+        if min is not None:
+            ValueError.__init__(self, '{} is less then {}'.format(value, min))
+        else:
+            ValueError.__init__(self, '{} is greater then {}'.format(value, max))
 
 
 class RegexException(ValueError):
     def __init__(self, value, regex):
-        self._value = value
-        self._regex = regex
-
-    def __str__(self):
-        return 'Mismatch "{}" for "{}"'.format(self._value, self._regex.pattern)
+        self.value = value
+        self.regex = regex
+        ValueError.__init__(self, 'Mismatch "{}" for "{}"'.format(value, regex.pattern))
 
 
 def error_to_dict(exc):

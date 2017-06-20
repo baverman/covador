@@ -13,6 +13,8 @@ dev
 * [Feature] ``_`` keyword argument for schema constructor to attach a validation chain
   to a resulted schema. Can be used instead of ``dpass``.
 
+* [Feature] Public properties for built-in validation exceptions.
+
 * [Fix] Fixed ``covador.aiohttp.params`` decorator.
 
 * [Fix] Incorrect schema for ``rparams`` for all supported frameworks.

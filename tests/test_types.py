@@ -241,3 +241,22 @@ def test_regex():
         assert regex('^boo$')('fooboofoo')
 
     assert str(ei.value) == 'Mismatch "fooboofoo" for "^boo$"'
+
+
+def test_opt_groups():
+    s = schema(opt_group(foo=item(str, src='fooo'), baz=str), opt_group(boo=str, baz=str))
+
+    s({'fooo': 'foo', 'baz': 'baz'})
+    s({'boo': 'boo', 'baz': 'baz'})
+
+    with pytest.raises(RequiredExcepion) as ei:
+        s({})
+    assert str(ei.value) == 'Items baz, boo or baz, fooo are required'
+
+    with pytest.raises(RequiredExcepion) as ei:
+        s({'boo': 'baz'})
+    assert str(ei.value) == 'Items baz, boo or baz, fooo are required'
+
+    with pytest.raises(RequiredExcepion) as ei:
+        s({'fooo': 'foo'})
+    assert str(ei.value) == 'Items baz, boo or baz, fooo are required'
