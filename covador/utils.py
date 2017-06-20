@@ -64,7 +64,7 @@ def make_schema(top_schema):
     def schema(*args, **kwargs):
         if args:
             if len(args) == 1 and not kwargs:
-                return args[0]
+                return top_schema(args[0])
             return top_schema(merge_dicts(*args, **kwargs))
         return top_schema(kwargs)
     return schema

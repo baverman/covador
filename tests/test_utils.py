@@ -105,6 +105,12 @@ def test_pipe():
 
 
 def test_smart_schema():
+    s = schema(foo=int)
+    assert s({'foo': 10}) == {'foo': 10}
+
+    s = schema({'foo': int})
+    assert s({'foo': 10}) == {'foo': 10}
+
     s = schema({'foo': int}, {'foo': str})
     assert s({'foo': 10}) == {'foo': '10'}
 
