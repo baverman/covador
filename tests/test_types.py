@@ -28,7 +28,7 @@ def test_required_field():
 
 
 def test_opt_field():
-    s = schema(foo=opt(int), boo=opt(int, default=10))
+    s = schema(foo=opt(int), boo=opt(int, 10))
     result = s({})
     assert result == {'foo': None, 'boo': 10}
 
@@ -69,7 +69,7 @@ def test_item_empty():
 
 
 def test_opt_empty():
-    s = opt(int, default=10)
+    s = opt(int, 10)
     assert s('') == 10
 
     s = nopt(int)

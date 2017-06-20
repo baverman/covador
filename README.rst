@@ -21,7 +21,7 @@ Validation library for processing http endpoint arguments.
     app = Flask(__name__)
 
     @app.route('/')
-    @query_string(foo=opt(split(int), default=[]))
+    @query_string(foo=opt(split(int), []))
     def csv_argument(foo):
         return repr(foo)
 
@@ -32,12 +32,14 @@ Validation library for processing http endpoint arguments.
 
 
 * Support for flask, django, aiohttp and tornado.
-* Simple creating of custom ``query_string``/``form``/``params`` wrappers.
+* Simple creating of custom ``query_string``/``form``/``params``/``json_body``/``rparams`` wrappers.
 * Multi dict support via item ``multi`` param.
 * Multi dict keys support via item ``src`` param.
 * Simple interface for custom validators/processors it's just a callable.
 * Maps, Lists, Tuples, Enums.
-* Validation chains: ``opt(default=[]) | split(separator=' ') | List(int) | (lambda it: it[:10])`` —
-  an optional argument of space separated integers and we need top 10 items from it.
+* Validation chains: ``opt(default=[]) | split(separator=' ') | List(int) | (lambda it: it[:10])``
+  or more consise ``opt(split(int, separator=' '), []) | operator.itemgetter(slice(10))`` —
+  an optional argument of space separated integers and we need top 10 items from it and it
+  is empty by default.
 * Literal schema: ``schema(foo=[{'boo': int}])``, validates ``{'foo': [{'boo': 10}, {'boo': 20}]}``.
 * Bytes/unicode aware.

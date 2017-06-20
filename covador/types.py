@@ -147,7 +147,7 @@ class List(Pipeable):
 
         List(int)(['1', '2']) -> [1, 2]
 
-        List(opt(int, default=42))(['1', '2', None]) -> [1, 2, 42]
+        List(opt(int, 42))(['1', '2', None]) -> [1, 2, 42]
 
         List(enum('boo', 'foo'))(['boo', 'bar', 'foo'])
             -> covador.schema.Invalid: [(1, ValueError("'bar' not in ['boo', 'foo']",))]
