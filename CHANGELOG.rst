@@ -1,5 +1,5 @@
-dev
-===
+0.9.5
+=====
 
 * [Break] Changed argument order for ``item``. ``default`` is on a second
   position now, so one can use ``opt(int, 0)`` instead of ``opt(int, default=0)``.
