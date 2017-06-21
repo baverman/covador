@@ -1,5 +1,5 @@
-dev
-===
+0.9.6
+=====
 
 * [Feature] Naive ``t_datetime``, ``t_date`` and ``t_time`` validators.
   Completely timezone-unaware. Suitable only for simple cases when only
