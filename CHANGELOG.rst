@@ -3,7 +3,11 @@ dev
 
 * [Feature] Naive ``t_datetime``, ``t_date`` and ``t_time`` validators.
   Completely timezone-unaware. Suitable only for simple cases when only
-  a local time is needed.
+  a local time is needed. And you always can apply pytz for these values.
+
+* [Feature] ``timestamp`` validator to deal with unix timestamps in seconds
+  and milliseconds and treat it like UTC and local values.
+
 
 0.9.5
 =====

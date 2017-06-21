@@ -10,7 +10,7 @@ __all__ = ['Map', 'List', 'Tuple', 'Int', 'Str', 'Bool', 'split', 'Range',
            'irange', 'frange', 'length', 'enum', 'ListMap', 'Bytes', 'regex',
            'email', 'url', 'uuid', 'item', 'opt', 'nopt', 'Invalid', 'RequiredExcepion',
            'RangeException', 'RegexException', 'LengthException', 'EnumException',
-           'oneof', 'make_schema', 't_datetime', 't_date', 't_time']
+           'oneof', 'make_schema', 't_datetime', 't_date', 't_time', 'timestamp']
 
 
 class item(object):
@@ -400,6 +400,22 @@ def t_date(fmt='%Y-%m-%d'):
 
 def t_time(fmt='%H:%M:%S'):
     return t_datetime(fmt) | (lambda r: r.time())
+
+
+class timestamp(Pipeable):
+    def __init__(self, msec=False, utc=True):
+        self.msec = msec
+        self.utc = utc
+
+    def __call__(self, data):
+        data = float(data)
+        if self.msec:
+            data /= 1000
+
+        if self.utc:
+            return datetime.utcfromtimestamp(data)
+        else:
+            return datetime.fromtimestamp(data)
 
 
 TYPES = {
