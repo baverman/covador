@@ -1,8 +1,10 @@
+from datetime import datetime, date, time
 import pytest
 
 from covador import schema
 from covador.types import *
 from covador.errors import error_to_dict
+from covador.compat import utype
 
 
 def test_existing_field():
@@ -32,6 +34,8 @@ def test_opt_field():
     s = schema(foo=opt(int), boo=opt(int, 10))
     result = s({})
     assert result == {'foo': None, 'boo': 10}
+
+    assert (opt(str, 'aaa') | utype.upper)(None) == 'aaa'
 
 
 def test_src():
@@ -250,7 +254,7 @@ def test_oneof_schema():
                bar=opt(str))
 
     assert s({'fooo': 'foo', 'baz': 'baz'}) == {'bar': None, 'boo': None, 'baz': u'baz', 'foo': u'foo'}
-    s({'boo': 'boo', 'baz': 'baz'})
+    s({'boo': 'boo', 'baz': 'baz'}) == {'bar': None, 'boo': u'boo', 'baz': u'baz', 'foo': None}
 
     with pytest.raises(Invalid) as ei:
         s({})
@@ -269,3 +273,13 @@ def test_oneof():
     s = oneof(Int(), Str())
     assert s(10) == 10
     assert s('boo') == u'boo'
+
+
+def test_datetime():
+    assert t_datetime()('2016-02-05 12:45:03') == datetime(2016, 2, 5, 12, 45, 3)
+    assert t_date()('2016-02-05') == date(2016, 2, 5)
+    assert t_time()('12:45:03') == time(12, 45, 3)
+
+    with pytest.raises(ValueError) as ei:
+        t_time()('boo')
+    assert str(ei.value) == "time data 'boo' does not match format '%H:%M:%S'"

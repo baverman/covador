@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import re
+from datetime import datetime
 
-from .utils import Pipeable, clone, ensure_context, merge_dicts
+from .utils import Pipeable, clone, ensure_context
 from .compat import utype, btype, stype, ustr, bstr
 from .errors import Invalid, RequiredExcepion, RangeException, RegexException, LengthException, EnumException
 
@@ -9,7 +10,7 @@ __all__ = ['Map', 'List', 'Tuple', 'Int', 'Str', 'Bool', 'split', 'Range',
            'irange', 'frange', 'length', 'enum', 'ListMap', 'Bytes', 'regex',
            'email', 'url', 'uuid', 'item', 'opt', 'nopt', 'Invalid', 'RequiredExcepion',
            'RangeException', 'RegexException', 'LengthException', 'EnumException',
-           'oneof', 'make_schema']
+           'oneof', 'make_schema', 't_datetime', 't_date', 't_time']
 
 
 class item(object):
@@ -383,6 +384,22 @@ URL_REGEX = r"""(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9
 url = Str() | regex(URL_REGEX)
 
 uuid = Str() | regex(r"(?i)^(?:urn:uuid:)?\{?[a-f0-9]{8}(?:-?[a-f0-9]{4}){3}-?[a-f0-9]{12}\}?$")
+
+
+class t_datetime(Pipeable):
+    def __init__(self, fmt='%Y-%m-%d %H:%M:%S'):
+        self.fmt = fmt
+
+    def __call__(self, data):
+        return datetime.strptime(data, self.fmt)
+
+
+def t_date(fmt='%Y-%m-%d'):
+    return t_datetime(fmt) | (lambda r: r.date())
+
+
+def t_time(fmt='%H:%M:%S'):
+    return t_datetime(fmt) | (lambda r: r.time())
 
 
 TYPES = {
