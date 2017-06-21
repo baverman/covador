@@ -173,3 +173,15 @@ class ValidationDecorator(object):
 
     def on_error(self, handler):
         return clone(self, error_handler=handler)
+
+
+class ErrorHandler(object):
+    def __init__(self, default):
+        self.default = default
+        self.handler = None
+
+    def __call__(self, ctx):
+        return (self.handler or self.default)(ctx)
+
+    def set(self, handler):
+        self.handler = handler

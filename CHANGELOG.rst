@@ -8,6 +8,18 @@ dev
 * [Feature] ``timestamp`` validator to deal with unix timestamps in seconds
   and milliseconds and treat it like UTC and local values.
 
+* [Feature] Error handler wrapper allows to override default error handlers
+  without touching decorators:
+
+  .. code:: python
+
+      from covador import flask
+
+      @flask.error_hanler.set
+      def custom_error_handler(ctx):
+          print ctx.exception
+          ctx.reraise()  # reraise exception with original traceback
+
 
 0.9.5
 =====

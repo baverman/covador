@@ -4,11 +4,12 @@ import json
 from flask import request, current_app
 
 from . import ValidationDecorator, schema, list_schema
-from .utils import merge_dicts, parse_qs
+from .utils import merge_dicts, parse_qs, ErrorHandler
 from .errors import error_to_json
 from .compat import ustr
 
 
+@ErrorHandler
 def error_handler(ctx):  # pragma: no cover
     return current_app.response_class(error_to_json(ctx.exception),
                                       mimetype='application/json', status=400)

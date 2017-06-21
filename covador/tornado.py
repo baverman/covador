@@ -5,6 +5,7 @@ from functools import wraps
 from tornado import web
 from . import list_schema, schema, ValidationDecorator
 from .errors import error_to_json
+from .utils import ErrorHandler
 
 
 def error_adapter(func):  # pragma: no cover
@@ -14,6 +15,7 @@ def error_adapter(func):  # pragma: no cover
     return inner
 
 
+@ErrorHandler
 @error_adapter
 def error_handler(handler, ctx):  # pragma: no cover
     handler.set_status(400)

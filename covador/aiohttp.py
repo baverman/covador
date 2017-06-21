@@ -4,7 +4,8 @@ from asyncio import coroutine
 from aiohttp.web import Response
 
 from . import schema, list_schema
-from .utils import merge_dicts, parse_qs, ValidationDecorator, Validator, ErrorContext
+from .utils import (merge_dicts, parse_qs, ValidationDecorator, Validator,
+                    ErrorContext, ErrorHandler)
 from .errors import error_to_json
 
 
@@ -35,6 +36,7 @@ def error_adapter(func):
     return inner
 
 
+@ErrorHandler
 @error_adapter
 def error_handler(_request, ctx):
     return Response(body=error_to_json(ctx.exception), status=400,

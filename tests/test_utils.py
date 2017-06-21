@@ -3,7 +3,7 @@ import pytest
 from covador import schema
 from covador.types import List, Int
 from covador.utils import (parse_qs, wrap_in, merge_dicts, ValidationDecorator,
-                           Pipe, pipe, ErrorContext, dpass)
+                           Pipe, pipe, ErrorContext, dpass, ErrorHandler)
 
 
 def test_parse_qs():
@@ -136,3 +136,17 @@ def test_error_context():
 
     with pytest.raises(KeyError):
         ctx.reraise(KeyError('boo'))
+
+
+def test_error_handler():
+    @ErrorHandler
+    def default_error_handler(ctx):
+        return ctx + 10
+
+    assert default_error_handler(10) == 20
+
+    @default_error_handler.set
+    def error_handler(ctx):
+        return ctx + 20
+
+    assert default_error_handler(10) == 30

@@ -5,7 +5,7 @@ import json
 from django import http
 
 from . import ValidationDecorator, list_schema, schema
-from .utils import merge_dicts, parse_qs
+from .utils import merge_dicts, parse_qs, ErrorHandler
 from .errors import error_to_json
 
 
@@ -16,6 +16,7 @@ def error_adapter(func):  # pragma: no cover
     return inner
 
 
+@ErrorHandler
 @error_adapter
 def error_handler(_request, ctx):  # pragma: no cover
     return http.HttpResponseBadRequest(error_to_json(ctx.exception))
