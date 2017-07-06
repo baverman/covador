@@ -3,14 +3,17 @@ import re
 from datetime import datetime
 
 from .utils import Pipeable, clone, ensure_context
-from .compat import utype, btype, stype, ustr, bstr
+from .compat import utype, btype, stype, ustr, str_map
 from .errors import Invalid, RequiredExcepion, RangeException, RegexException, LengthException, EnumException
 
 __all__ = ['Map', 'List', 'Tuple', 'Int', 'Str', 'Bool', 'split', 'Range',
            'irange', 'frange', 'length', 'enum', 'ListMap', 'Bytes', 'regex',
            'email', 'url', 'uuid', 'item', 'opt', 'nopt', 'Invalid', 'RequiredExcepion',
            'RangeException', 'RegexException', 'LengthException', 'EnumException',
-           'oneof', 'make_schema', 't_datetime', 't_date', 't_time', 'timestamp']
+           'oneof', 'make_schema', 't_datetime', 't_date', 't_time', 'timestamp',
+           'numbers']
+
+UNDEFINED = object()
 
 
 class item(object):
@@ -299,10 +302,7 @@ class Bytes(Pipeable):
 
 class split(Pipeable):
     def __init__(self, item=None, separator=',', strip=True, empty=False):
-        self.separators = {
-            utype: ustr(separator),
-            btype: bstr(separator)
-        }
+        self.separators = str_map(separator)
         self.strip = strip
         self.empty = empty
         self.list = item and List(item)
@@ -338,9 +338,10 @@ class enum(Pipeable):
 
 
 class length(Pipeable):
-    def __init__(self, min=None, max=None):
+    def __init__(self, min=None, max=UNDEFINED):
         self.min = min
-        self.max = max
+        self.max = min if max is UNDEFINED else max
+        assert self.min is not None or self.max is not None
 
     def __call__(self, data):
         size = len(data)
@@ -349,6 +350,19 @@ class length(Pipeable):
         if self.max is not None and size > self.max:
             raise LengthException(data, max=self.max)
         return data
+
+
+class Numbers(Pipeable):
+    def __init__(self):
+        self.empty = str_map('')
+        self.re = str_map('\d+')
+
+    def __call__(self, data):
+        t = type(data)
+        return self.empty[t].join(re.findall(self.re[t], data))
+
+
+numbers = Numbers()
 
 
 class Range(Pipeable):

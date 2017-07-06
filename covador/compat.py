@@ -19,6 +19,13 @@ def ustr(data, encoding='latin1'):
     return data
 
 
+def str_map(data, encoding='latin1'):
+    return {
+        utype: ustr(data, encoding),
+        btype: bstr(data, encoding),
+    }
+
+
 if PY2:  # pragma: no cover
     import __builtin__ as builtins
     import urlparse

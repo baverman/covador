@@ -1,3 +1,13 @@
+0.9.7
+=====
+
+* [Break] `length` validator with single argument asumes min=max, so
+  `length(3) is equivalent for length(3, 3)`.
+
+* [Feature] `numbers` validator which can extract number sequences from
+  strings. Can be used to extract digits from phone numbers.
+
+
 0.9.6
 =====
 

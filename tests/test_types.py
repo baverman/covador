@@ -186,6 +186,17 @@ def test_length():
         assert l('1234')
     assert str(ei.value) == 'Length of 4 is greater then 3'
 
+    l = length(4)
+    assert l('1234') == '1234'
+
+    with pytest.raises(LengthException) as ei:
+        assert l('2')
+    assert str(ei.value) == 'Length of 1 is less then 4'
+
+    with pytest.raises(LengthException) as ei:
+        assert l('24567')
+    assert str(ei.value) == 'Length of 5 is greater then 4'
+
 
 def test_multi_map():
     s = ListMap({'foo': int, 'boo': item(multi=True)})
@@ -292,3 +303,11 @@ def test_timestamp():
 
     ts = time.mktime(dt.datetime(2017, 6, 21, 7, 1, 17).timetuple())
     assert timestamp(utc=False)(ts) == dt.datetime(2017, 6, 21, 7, 1, 17)
+
+
+def test_numbers():
+    assert numbers('123') == '123'
+    assert numbers(u'123') == u'123'
+    assert numbers(b'123') == b'123'
+
+    assert numbers('+7 (980) 678-12-13') == '79806781213'
