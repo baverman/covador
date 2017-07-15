@@ -7,6 +7,7 @@ from django import http
 from . import ValidationDecorator, list_schema, schema
 from .utils import merge_dicts, parse_qs, ErrorHandler
 from .errors import error_to_json
+from .compat import ustr
 
 
 def error_adapter(func):  # pragma: no cover
@@ -42,7 +43,7 @@ _query_string = lambda request, *_args, **_kwargs: get_qs(request)
 _form = lambda request, *_args, **_kwargs: get_form(request)
 _params = lambda request, *_args, **_kwargs: merge_dicts(get_qs(request), get_form(request))
 _rparams = lambda *_args, **kwargs: kwargs
-_json_body = lambda request, *_args, **_kwargs: json.loads(request.body)
+_json_body = lambda request, *_args, **_kwargs: json.loads(ustr(request.body, 'utf-8'))
 
 query_string = ValidationDecorator(_query_string, error_handler, list_schema)
 form = ValidationDecorator(_form, error_handler, list_schema)

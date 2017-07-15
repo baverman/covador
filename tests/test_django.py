@@ -25,3 +25,15 @@ def test_get_form():
 
     assert repr(get_form(request)) == repr({'boo': [b'']})
     assert request._covador_form
+
+
+def test_get_json():
+    class request:
+        body = b'{"boo": 42}'
+
+    @json_body(boo=int)
+    def test(request, boo):
+        assert boo == 42
+        return 'ok'
+
+    assert test(request) == 'ok'

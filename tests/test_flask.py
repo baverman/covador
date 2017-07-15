@@ -1,45 +1,68 @@
 # -*- coding: utf-8 -*-
-import sys
+import json
+from flask import Flask
 
-class flask:
-    class request:
-        pass
-
-    class current_app:
-        pass
-
-class werkzeug:
-    class exceptions:
-        class BadRequest(Exception):
-            pass
-
-sys.modules['flask'] = flask
-sys.modules['werkzeug'] = werkzeug
-sys.modules['werkzeug.exceptions'] = werkzeug.exceptions
-
+from covador import opt
 from covador.flask import *
+
+app = Flask(__name__)
 
 
 def test_get_qs():
-    request.environ = {'QUERY_STRING': b'boo='}
-    assert repr(get_qs()) == repr({'boo': [b'']})
-    assert request._covador_qs
+    @query_string(boo=opt(str))
+    def test(boo):
+        return boo
+
+    with app.test_request_context(b'/?boo=boo'):
+        assert test() == u'boo'
+        assert request._covador_qs
+
+    with app.test_request_context(b'/?boo='):
+        assert test() == None
+        assert request._covador_qs
 
 
 def test_get_form():
-    request.get_data = staticmethod(lambda *args, **kwargs: b'boo=')
-    assert repr(get_form()) == repr({'boo': [b'']})
-    assert request._covador_form
+    @form(boo=str)
+    def test(boo):
+        return boo
+
+    with app.test_request_context(b'/', data=b'boo=foo'):
+        assert test() == u'foo'
+        assert request._covador_form
+
+    with app.test_request_context(b'/', data=b'boo='):
+        resp = test()
+        assert resp.status_code == 400
+
+        error = json.loads(resp.get_data(True))
+        assert error == {'details': {'boo': 'Required item'},
+                         'error': 'bad-request'}
+
+
+def test_get_params():
+    @params(boo=str, foo=int)
+    def test(boo, foo):
+        return boo, foo
+
+    with app.test_request_context(b'/?boo=baz', data=b'foo=10'):
+        assert test() == (u'baz', 10)
+
+
+def test_get_rparams():
+    @rparams(boo=int)
+    def test(boo):
+        return boo
+
+    with app.test_request_context(b'/?boo=baz', data=b'foo=10'):
+        assert test(boo='10') == 10
 
 
 def test_json():
-    request.get_data = staticmethod(lambda *args, **kwargs: u'{"boo": "10", "foo": "утф"}'.encode('utf-8'))
-
     @json_body(boo=int, foo=str)
     def test(boo, foo):
-        assert boo == 10
-        assert foo == u'утф'
-        test.called = True
+        return boo, foo
 
-    test()
-    assert test.called
+    data = u'{"boo": "10", "foo": "утф"}'
+    with app.test_request_context(b'/', data=data.encode('utf-8')):
+        assert test() == (10, u'утф')
