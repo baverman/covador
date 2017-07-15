@@ -288,21 +288,21 @@ def test_oneof():
 
 
 def test_datetime():
-    assert t_datetime()('2016-02-05 12:45:03') == dt.datetime(2016, 2, 5, 12, 45, 3)
-    assert t_date()('2016-02-05') == dt.date(2016, 2, 5)
-    assert t_time()('12:45:03') == dt.time(12, 45, 3)
+    assert DateTime()('2016-02-05 12:45:03') == dt.datetime(2016, 2, 5, 12, 45, 3)
+    assert Date()('2016-02-05') == dt.date(2016, 2, 5)
+    assert Time()('12:45:03') == dt.time(12, 45, 3)
 
     with pytest.raises(ValueError) as ei:
-        t_time()('boo')
+        Time()('boo')
     assert str(ei.value) == "time data 'boo' does not match format '%H:%M:%S'"
 
 
 def test_timestamp():
-    assert timestamp()('1498028477') == dt.datetime(2017, 6, 21, 7, 1, 17)
-    assert timestamp(msec=True)('1498028477000') == dt.datetime(2017, 6, 21, 7, 1, 17)
+    assert timestamp('1498028477') == dt.datetime(2017, 6, 21, 7, 1, 17)
+    assert timestamp_msec('1498028477000') == dt.datetime(2017, 6, 21, 7, 1, 17)
 
     ts = time.mktime(dt.datetime(2017, 6, 21, 7, 1, 17).timetuple())
-    assert timestamp(utc=False)(ts) == dt.datetime(2017, 6, 21, 7, 1, 17)
+    assert Timestamp(utc=False)(ts) == dt.datetime(2017, 6, 21, 7, 1, 17)
 
 
 def test_numbers():

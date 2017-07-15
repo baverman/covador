@@ -1,3 +1,10 @@
+1.0.0
+=====
+
+* [Break] rename `t_date`, `t_time`, `t_datetime` into `Date`, `Time`,
+  `DateTime` respectively.
+
+
 0.9.7
 =====
 

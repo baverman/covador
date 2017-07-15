@@ -10,8 +10,8 @@ __all__ = ['Map', 'List', 'Tuple', 'Int', 'Str', 'Bool', 'split', 'Range',
            'irange', 'frange', 'length', 'enum', 'ListMap', 'Bytes', 'regex',
            'email', 'url', 'uuid', 'item', 'opt', 'nopt', 'Invalid', 'RequiredExcepion',
            'RangeException', 'RegexException', 'LengthException', 'EnumException',
-           'oneof', 'make_schema', 't_datetime', 't_date', 't_time', 'timestamp',
-           'numbers']
+           'oneof', 'make_schema', 'DateTime', 'Date', 'Time', 'Timestamp',
+           'timestamp', 'timestamp_msec', 'numbers']
 
 UNDEFINED = object()
 
@@ -400,7 +400,7 @@ url = Str() | regex(URL_REGEX)
 uuid = Str() | regex(r"(?i)^(?:urn:uuid:)?\{?[a-f0-9]{8}(?:-?[a-f0-9]{4}){3}-?[a-f0-9]{12}\}?$")
 
 
-class t_datetime(Pipeable):
+class DateTime(Pipeable):
     def __init__(self, fmt='%Y-%m-%d %H:%M:%S'):
         self.fmt = fmt
 
@@ -408,15 +408,15 @@ class t_datetime(Pipeable):
         return datetime.strptime(data, self.fmt)
 
 
-def t_date(fmt='%Y-%m-%d'):
-    return t_datetime(fmt) | (lambda r: r.date())
+def Date(fmt='%Y-%m-%d'):
+    return DateTime(fmt) | (lambda r: r.date())
 
 
-def t_time(fmt='%H:%M:%S'):
-    return t_datetime(fmt) | (lambda r: r.time())
+def Time(fmt='%H:%M:%S'):
+    return DateTime(fmt) | (lambda r: r.time())
 
 
-class timestamp(Pipeable):
+class Timestamp(Pipeable):
     def __init__(self, msec=False, utc=True):
         self.msec = msec
         self.utc = utc
@@ -430,6 +430,10 @@ class timestamp(Pipeable):
             return datetime.utcfromtimestamp(data)
         else:
             return datetime.fromtimestamp(data)
+
+
+timestamp = Timestamp()
+timestamp_msec = Timestamp(msec=True)
 
 
 TYPES = {
