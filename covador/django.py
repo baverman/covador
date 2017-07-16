@@ -10,7 +10,7 @@ from .errors import error_to_json
 from .compat import ustr
 
 
-def error_adapter(func):  # pragma: no cover
+def error_adapter(func):
     @wraps(func)
     def inner(ctx):
         return func(ctx.args[0], ctx)
@@ -19,7 +19,7 @@ def error_adapter(func):  # pragma: no cover
 
 @ErrorHandler
 @error_adapter
-def error_handler(_request, ctx):  # pragma: no cover
+def error_handler(_request, ctx):
     return http.HttpResponseBadRequest(error_to_json(ctx.exception))
 
 
@@ -43,7 +43,7 @@ _query_string = lambda request, *_args, **_kwargs: get_qs(request)
 _form = lambda request, *_args, **_kwargs: get_form(request)
 _params = lambda request, *_args, **_kwargs: merge_dicts(get_qs(request), get_form(request))
 _rparams = lambda *_args, **kwargs: kwargs
-_json_body = lambda request, *_args, **_kwargs: json.loads(ustr(request.body, 'utf-8'))
+_json_body = lambda request, *_args, **_kwargs: json.loads(ustr(request.body, request.encoding or 'utf-8'))
 
 query_string = ValidationDecorator(_query_string, error_handler, list_schema)
 form = ValidationDecorator(_form, error_handler, list_schema)
