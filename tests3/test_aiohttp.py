@@ -30,7 +30,7 @@ def hello_get(request, boo):
 
 @rparams(foo=item(int, src='boo'))
 @asyncio.coroutine
-def hello_rget(request, boo, foo):
+def hello_rget(request, foo):
     return web.Response(text='Hello, world {}'.format(repr(foo)))
 
 
@@ -98,7 +98,9 @@ def test_get_qs():
 
 @with_loop
 def test_rget():
-    response = yield from call(hello_rget(make_request('GET', '/'), boo='55'))
+    request = make_request('GET', '/')
+    request._match_info = {'boo': '55'}
+    response = yield from call(hello_rget(request))
     assert response.status == 200
     assert response.text == 'Hello, world 55'
 

@@ -76,7 +76,7 @@ def _params(request, *_args, **_kwargs):
 
 _query_string = lambda request, *_args, **_kwargs: get_qs(get_request(request))
 _form = lambda request, *_args, **_kwargs: get_form(get_request(request))
-_rparams = lambda *_args, **kwargs: kwargs
+_rparams = lambda request, *_args, **kwargs: request.match_info
 _json_body = lambda request, *_args, **_kwargs: get_json(get_request(request))
 
 query_string = ValidationDecorator(_query_string, error_handler, list_schema)

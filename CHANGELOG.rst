@@ -4,6 +4,8 @@
 * [Break] rename `t_date`, `t_time`, `t_datetime` into `Date`, `Time`,
   `DateTime` respectively.
 
+* [Feature] `aiohttp.rparams` now uses `request.match_info`.
+
 
 0.9.7
 =====
