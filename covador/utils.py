@@ -1,7 +1,7 @@
 import sys
 from functools import wraps, partial
 
-from .compat import PY2, ustr, bstr, btype, urlparse, reraise
+from .compat import PY2, ustr, bstr, btype, utype, urlparse, reraise
 
 
 def merge_dicts(*dicts, **kwargs):
@@ -20,8 +20,11 @@ def parse_qs(data):
     """
     if not PY2 and type(data) is btype:  # pragma: no cover py2
         # shitty python3, we need to ensure data is unicode string
-        result = urlparse.parse_qs(ustr(data, 'latin1'), True)
-        result = {k: [bstr(v, 'latin1') for v in items] for k, items in result.items()}
+        result = urlparse.parse_qs(ustr(data, 'utf-8'), True)
+        result = {k: [bstr(v, 'utf-8') for v in items] for k, items in result.items()}
+    elif PY2 and type(data) is utype:  # pragma: no cover py3
+        result = urlparse.parse_qs(bstr(data, 'utf-8'), True)
+        result = {k: [ustr(v, 'utf-8') for v in items] for k, items in result.items()}
     else:
         result = urlparse.parse_qs(data, True)
 

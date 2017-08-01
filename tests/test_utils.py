@@ -5,9 +5,12 @@ from covador import schema
 from covador.types import List, Int
 from covador.utils import (parse_qs, wrap_in, merge_dicts, ValidationDecorator,
                            Pipe, pipe, ErrorContext, dpass, ErrorHandler)
+from covador.compat import urlencode, ustr, bstr
 
 
 def test_parse_qs():
+    assert parse_qs(ustr(urlencode({'boo': u'буу'.encode('utf-8')}), 'utf-8')) == {'boo': [u'буу']}
+    assert parse_qs(bstr(urlencode({'boo': u'буу'.encode('utf-8')}), 'utf-8')) == {'boo': [u'буу'.encode('utf-8')]}
     assert parse_qs(u'boo=буу') == {'boo': [u'буу']}
     assert parse_qs(u'boo=буу'.encode('utf-8')) == {'boo': [u'буу'.encode('utf-8')]}
 
