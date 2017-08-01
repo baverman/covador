@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pytest
 
 from covador import schema
@@ -7,8 +8,8 @@ from covador.utils import (parse_qs, wrap_in, merge_dicts, ValidationDecorator,
 
 
 def test_parse_qs():
-    assert parse_qs('boo=foo') == {'boo': ['foo']}
-    assert parse_qs(b'boo=foo') == {'boo': [b'foo']}
+    assert parse_qs(u'boo=буу') == {'boo': [u'буу']}
+    assert parse_qs(u'boo=буу'.encode('utf-8')) == {'boo': [u'буу'.encode('utf-8')]}
 
 
 def test_wrap_in():

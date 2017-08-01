@@ -1,3 +1,9 @@
+0.9.9
+=====
+
+* [Fix] UnicodeDecodeError in parse_qs under python3
+
+
 0.9.8
 =====
 

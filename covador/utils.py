@@ -1,7 +1,7 @@
 import sys
 from functools import wraps, partial
 
-from .compat import PY2, ustr, urlparse, reraise
+from .compat import PY2, ustr, bstr, btype, urlparse, reraise
 
 
 def merge_dicts(*dicts, **kwargs):
@@ -18,9 +18,13 @@ def parse_qs(data):
 
     Ensures that dict keys are native strings.
     """
-    result = urlparse.parse_qs(data, True)
-    if not PY2:  # pragma: no cover py2
-        result = {ustr(k): v for k, v in result.items()}
+    if not PY2 and type(data) is btype:  # pragma: no cover py2
+        # shitty python3, we need to ensure data is unicode string
+        result = urlparse.parse_qs(ustr(data, 'latin1'), True)
+        result = {k: [bstr(v, 'latin1') for v in items] for k, items in result.items()}
+    else:
+        result = urlparse.parse_qs(data, True)
+
     return result
 
 
