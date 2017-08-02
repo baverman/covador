@@ -111,7 +111,7 @@ def test_error_get_qs():
     assert response.status == 400
     assert json.loads(response.text) == {
         'details': {
-            'boo': "invalid literal for int() with base 10: 'foo'"
+            'boo': "invalid literal for int() with base 10: {}".format(repr(b'foo'))
         },
         'error': 'bad-request'
     }

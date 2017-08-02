@@ -13,21 +13,29 @@ def merge_dicts(*dicts, **kwargs):
     return result
 
 
-def parse_qs(data):
+def parse_qs(qs):
     """Helper func to parse query string with py2/py3 compatibility
 
     Ensures that dict keys are native strings.
     """
-    if not PY2 and type(data) is btype:  # pragma: no cover py2
-        # shitty python3, we need to ensure data is unicode string
-        result = urlparse.parse_qs(ustr(data, 'utf-8'), True)
-        result = {k: [bstr(v, 'utf-8') for v in items] for k, items in result.items()}
-    elif PY2 and type(data) is utype:  # pragma: no cover py3
-        result = urlparse.parse_qs(bstr(data, 'utf-8'), True)
-        result = {k: [ustr(v, 'utf-8') for v in items] for k, items in result.items()}
-    else:
-        result = urlparse.parse_qs(data, True)
+    result = {}
+    qs = bstr(qs, 'latin1')
+    pairs = [s2 for s1 in qs.split(b'&') for s2 in s1.split(b';')]
+    uq = urlparse.unquote if PY2 else urlparse.unquote_to_bytes
+    for name_value in pairs:
+        if not name_value:
+            continue
+        nv = name_value.split(b'=', 1)
+        if len(nv) != 2:
+            nv.append(b'')
 
+        name = nv[0].replace(b'+', b' ')
+        name = uq(name)
+        if not PY2:  # pragma: no cover py2
+            name = ustr(name, 'latin1')
+        value = nv[1].replace(b'+', b' ')
+        value = uq(value)
+        result.setdefault(name, []).append(value)
     return result
 
 
