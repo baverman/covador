@@ -1,7 +1,13 @@
+0.9.11
+=====
+
+* [Fix] reimplementation of parse_qs to deal with bug in py3.
+
+
 0.9.10
 =====
 
-* [Fix] UnicodeDecodeError in parse_qs under python3
+* [Fix] UnicodeDecodeError in parse_qs under python3.
 
 
 0.9.8
