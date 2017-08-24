@@ -36,7 +36,7 @@ Validation library for processing http endpoint arguments.
 * Multi dict support via item ``multi`` param.
 * Multi dict keys support via item ``src`` param.
 * Simple interface for custom validators/processors it's just a callable.
-* Maps, Lists, Tuples, Enums.
+* Maps, typed Maps, Lists, Tuples, Enums.
 * Validation chains: ``opt(default=[]) | split(separator=' ') | List(int) | (lambda it: it[:10])``
   or more concise ``opt(split(int, separator=' '), []) | operator.itemgetter(slice(10))`` —
   an optional argument of space separated integers and we need top 10 items from it and it
