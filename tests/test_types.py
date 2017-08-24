@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import time
 import datetime as dt
 import pytest
@@ -5,7 +6,7 @@ import pytest
 from covador import schema
 from covador.types import *
 from covador.errors import error_to_dict
-from covador.compat import utype
+from covador.compat import utype, PY2
 
 
 def test_existing_field():
@@ -311,3 +312,29 @@ def test_numbers():
     assert numbers(b'123') == b'123'
 
     assert numbers('+7 (980) 678-12-13') == '79806781213'
+
+
+def test_keyval():
+    s = KeyVal(int, int)
+    assert s({'10': '20'}) == {10: 20}
+
+    with pytest.raises(Invalid) as ei:
+        s({'boo': '10'})
+
+    err = error_to_dict(ei.value)
+    assert err == {'boo:key': "invalid literal for int() with base 10: 'boo'"}
+
+    with pytest.raises(Invalid) as ei:
+        s({u'бу': '10'})
+
+    err = error_to_dict(ei.value)
+    if PY2:
+        assert err == {u'бу:key': "invalid literal for int() with base 10: '\\xd0\\xb1\\xd1\\x83'"}
+    else:
+        assert err == {u'бу:key': "invalid literal for int() with base 10: 'бу'"}
+
+    with pytest.raises(Invalid) as ei:
+        s({b'20': 'boo'})
+
+    err = error_to_dict(ei.value)
+    assert err == {b'20:val': "invalid literal for int() with base 10: 'boo'"}

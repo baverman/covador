@@ -26,6 +26,12 @@ def str_map(data, encoding='latin1'):
     }
 
 
+def str_coerce(stype, data, encoding='latin1'):
+    if type(stype) is utype:
+        return ustr(data, encoding)
+    return bstr(data, encoding)
+
+
 if PY2:  # pragma: no cover
     import __builtin__ as builtins
     import urlparse

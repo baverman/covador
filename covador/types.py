@@ -3,15 +3,16 @@ import re
 from datetime import datetime
 
 from .utils import Pipeable, clone, ensure_context
-from .compat import utype, btype, stype, ustr, str_map
-from .errors import Invalid, RequiredExcepion, RangeException, RegexException, LengthException, EnumException
+from .compat import utype, btype, stype, ustr, str_map, str_coerce, bstr, PY2
+from .errors import (Invalid, RequiredExcepion, RangeException, RegexException,
+                     LengthException, EnumException)
 
 __all__ = ['Map', 'List', 'Tuple', 'Int', 'Str', 'Bool', 'split', 'Range',
            'irange', 'frange', 'length', 'enum', 'ListMap', 'Bytes', 'regex',
            'email', 'url', 'uuid', 'item', 'opt', 'nopt', 'Invalid', 'RequiredExcepion',
            'RangeException', 'RegexException', 'LengthException', 'EnumException',
            'oneof', 'make_schema', 'DateTime', 'Date', 'Time', 'Timestamp',
-           'timestamp', 'timestamp_msec', 'numbers']
+           'timestamp', 'timestamp_msec', 'numbers', 'KeyVal']
 
 UNDEFINED = object()
 
@@ -218,6 +219,43 @@ class ListMap(Map):
             return d and d[0] or None
 
 
+class KeyVal(Pipeable):
+    '''Checker of typed mappings
+
+    For example KeyVal(int, [int]) can validate dicts
+    with integers as keys and list of integers as values.
+    '''
+    def __init__(self, key=None, value=None):
+        self.key = get_item(key)
+        self.value = get_item(value)
+
+    def __call__(self, data):
+        errors = []
+        result = {}
+
+        for key, value in data.items():
+            if self.value:
+                try:
+                    value = self.value(value)
+                except Exception as e:
+                    errors.append((key + str_coerce(key, ':val'), e))
+                    continue
+
+            if self.key:
+                try:
+                    key = self.key(key)
+                except Exception as e:
+                    errors.append((key + str_coerce(key, ':key'), e))
+                    continue
+
+            result[key] = value
+
+        if errors:
+            raise Invalid(errors, result)
+
+        return result
+
+
 class Int(Pipeable):
     '''Integer checker
 
@@ -236,6 +274,8 @@ class Int(Pipeable):
 
     def __call__(self, data):
         if type(data) is utype or type(data) is btype:
+            if PY2:
+                data = bstr(data, 'utf-8')  # pragma: no cover py3
             return int(data, self.base)
         return int(data)
 

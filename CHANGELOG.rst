@@ -1,5 +1,11 @@
+0.9.12
+======
+
+* [Feature] `KeyVal` validator for typed mappings like Map<T1,T2>.
+
+
 0.9.11
-=====
+======
 
 * [Fix] reimplementation of parse_qs to deal with bug in py3.
 
