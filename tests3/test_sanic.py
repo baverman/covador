@@ -3,13 +3,16 @@ import pytest
 import asyncio
 
 from sanic import Sanic
+from sanic import views
 from sanic import response
 
 from covador.sanic import form
+from covador.sanic import m_form
 from covador.sanic import params
 from covador.sanic import rparams
 from covador.sanic import json_body
 from covador.sanic import query_string
+from covador.sanic import m_query_string
 
 
 @pytest.yield_fixture
@@ -45,6 +48,19 @@ def app():
     @asyncio.coroutine
     def test_rparams(request, **kwargs):
         return response.json(kwargs)
+
+    class SimpleView(views.HTTPMethodView):
+        @m_query_string(a=int)
+        @asyncio.coroutine
+        def get(self, request, **kwargs):
+            return response.json(kwargs)
+
+        @m_form(a=int)
+        @asyncio.coroutine
+        def post(self, request, **kwargs):
+            return response.json(kwargs)
+
+    app.add_route(SimpleView.as_view(), '/cbv/')
     yield app
 
 
@@ -56,6 +72,11 @@ def test_cli(loop, app, test_client):
 @asyncio.coroutine
 def test_query_string(test_cli):
     resp = yield from test_cli.get('/query/string/', params={'a': 2})
+    assert resp.status == 200
+    resp_json = yield from resp.json()
+    assert resp_json == {'a': 2}
+
+    resp = yield from test_cli.get('/cbv/', params={'a': 2})
     assert resp.status == 200
     resp_json = yield from resp.json()
     assert resp_json == {'a': 2}
@@ -72,6 +93,11 @@ def test_query_string_error(test_cli):
 @asyncio.coroutine
 def test_form(test_cli):
     resp = yield from test_cli.post('/form/', data={'a': 2})
+    assert resp.status == 200
+    resp_json = yield from resp.json()
+    assert resp_json == {'a': 2}
+
+    resp = yield from test_cli.post('/cbv/', data={'a': 2})
     assert resp.status == 200
     resp_json = yield from resp.json()
     assert resp_json == {'a': 2}
