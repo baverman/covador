@@ -6,7 +6,7 @@ function version_gt() {
 
 pyversion=$1
 shift
-if [[ version_gt $pyversion 3.4 ]]; then
+if version_gt $pyversion 3.4; then
     py.test --cov covador --cov-report term-missing --cov-fail-under=100 --cov-config cov-py3.ini "$@"
 elif [[ $pyversion == 3*  ]]; then
     py.test tests tests3 --cov covador --cov-report term-missing --cov-fail-under=100 --cov-config cov-py3.ini "$@"
