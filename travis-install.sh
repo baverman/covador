@@ -7,7 +7,7 @@ function version_gt() {
 pip install pytest-cov==2.3.1 Flask tornado WebOb Django
 if [[ $1 == 3* ]]; then
     pip install aiohttp
-    if version_gt $pyversion 3.4; then
+    if version_gt $1 3.4; then
         pip install sanic
         pip install pytest-sanic
     fi
