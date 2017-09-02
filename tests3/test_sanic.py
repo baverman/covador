@@ -62,6 +62,14 @@ def test_query_string(test_cli):
 
 
 @asyncio.coroutine
+def test_query_string_error(test_cli):
+    resp = yield from test_cli.get('/query/string/')
+    assert resp.status == 400
+    resp_json = yield from resp.json()
+    assert resp_json == {'details': {'a': 'Required item'}, 'error': 'bad-request'}
+
+
+@asyncio.coroutine
 def test_form(test_cli):
     resp = yield from test_cli.post('/form/', data={'a': 2})
     assert resp.status == 200

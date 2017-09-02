@@ -8,7 +8,7 @@ from .errors import error_to_json
 
 @ErrorHandler
 def error_handler(ctx):
-    return response.json(error_to_json(ctx.exception), status=400)
+    return response.raw(error_to_json(ctx.exception), status=400, content_type='application/json')
 
 
 _query_string = lambda request, *_args, **_kwargs: request.args
