@@ -1,10 +1,4 @@
 #!/bin/bash
 
-pip install pytest-cov==2.3.1 Flask tornado WebOb Django
-if [[ $1 == 3* ]]; then
-    pip install aiohttp
-    if [[ $1 != "3.4" ]]; then
-        pip install sanic
-        pip install pytest-sanic
-    fi
-fi
+pip install pytest-cov==2.3.1
+ls targets/$1/*/reqs.txt | xargs -n1 pip install -r
