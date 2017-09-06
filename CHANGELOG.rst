@@ -1,3 +1,9 @@
+0.9.13
+======
+
+* [Feature] Add support for Sanic.
+
+
 0.9.12
 ======
 
