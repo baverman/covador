@@ -1,7 +1,7 @@
 0.9.14
 ======
 
-* [Fix] Common item declarations lead to field erasure in schema
+* [Fix] Common item declarations lead to field erasure in schema.
 
 
 0.9.13
