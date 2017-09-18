@@ -338,3 +338,9 @@ def test_keyval():
 
     err = error_to_dict(ei.value)
     assert err == {b'20:val': "invalid literal for int() with base 10: 'boo'"}
+
+
+def test_share_items():
+    checker = item(str) | utype.lower
+    s = schema(boo=checker, foo=checker)
+    assert s({'boo': 'BOO', 'foo': 'FOO'}) == {'boo': u'boo', 'foo': u'foo'}

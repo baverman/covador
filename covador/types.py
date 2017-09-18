@@ -71,7 +71,9 @@ def nopt(*args, **kwargs):
 
 
 def get_item(it):
-    if not isinstance(it, item):
+    if isinstance(it, item):
+        it = clone(it)
+    else:
         it = item(it)
     return it
 
