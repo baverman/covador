@@ -1,3 +1,9 @@
+0.9.15
+======
+
+* [Break] empty_is_none=True for ``covador.item`` to synchronize behavior with ``covador.opt``.
+  Introduce similar ``covador.nitem``. Change allows to make explicit empty values acceptance.
+
 0.9.14
 ======
 
@@ -13,7 +19,7 @@
 0.9.12
 ======
 
-* [Feature] `KeyVal` validator for typed mappings like Map<T1,T2>.
+* [Feature] ``KeyVal`` validator for typed mappings like Map<T1,T2>.
 
 
 0.9.11
@@ -31,19 +37,19 @@
 0.9.8
 =====
 
-* [Break] rename `t_date`, `t_time`, `t_datetime` into `Date`, `Time`,
-  `DateTime` respectively.
+* [Break] rename ``t_date``, ``t_time``, ``t_datetime`` into ``Date``, ``Time``,
+  ``DateTime`` respectively.
 
-* [Feature] `aiohttp.rparams` now uses `request.match_info`.
+* [Feature] ``aiohttp.rparams`` now uses ``request.match_info``.
 
 
 0.9.7
 =====
 
-* [Break] `length` validator with single argument asumes min=max, so
-  `length(3) is equivalent for length(3, 3)`.
+* [Break] ``length`` validator with single argument asumes min=max, so
+  ``length(3) is equivalent for length(3, 3)``.
 
-* [Feature] `numbers` validator which can extract number sequences from
+* [Feature] ``numbers`` validator which can extract number sequences from
   strings. Can be used to extract digits from phone numbers.
 
 
