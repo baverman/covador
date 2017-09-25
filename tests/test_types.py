@@ -3,7 +3,7 @@ import time
 import datetime as dt
 import pytest
 
-from covador import schema
+from covador import schema, list_schema
 from covador.types import *
 from covador.errors import error_to_dict
 from covador.compat import utype, PY2
@@ -344,3 +344,12 @@ def test_share_items():
     checker = item(str) | utype.lower
     s = schema(boo=checker, foo=checker)
     assert s({'boo': 'BOO', 'foo': 'FOO'}) == {'boo': u'boo', 'foo': u'foo'}
+
+
+def test_nopt_in_schema():
+    assert opt(bool, True)('') == True
+    assert nopt(bool, True)('') == False
+
+    assert schema(boo=nopt(bool, True))({'boo': ''}) == {'boo': False}
+    assert list_schema(boo=nopt(bool, True))({'boo': ['']}) == {'boo': False}
+

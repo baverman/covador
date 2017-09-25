@@ -9,7 +9,7 @@ from .errors import (Invalid, RequiredExcepion, RangeException, RegexException,
 
 __all__ = ['Map', 'List', 'Tuple', 'Int', 'Str', 'Bool', 'split', 'Range',
            'irange', 'frange', 'length', 'enum', 'ListMap', 'Bytes', 'regex',
-           'email', 'url', 'uuid', 'item', 'opt', 'nopt', 'Invalid', 'RequiredExcepion',
+           'email', 'url', 'uuid', 'item', 'nitem', 'opt', 'nopt', 'Invalid', 'RequiredExcepion',
            'RangeException', 'RegexException', 'LengthException', 'EnumException',
            'oneof', 'make_schema', 'DateTime', 'Date', 'Time', 'Timestamp',
            'timestamp', 'timestamp_msec', 'numbers', 'KeyVal']
@@ -19,7 +19,7 @@ UNDEFINED = object()
 
 class item(object):
     def __init__(self, typ=None, default=None, source_key=None, src=None, dest=None,
-                 required=True, multi=False, empty_is_none=False,  **kwargs):
+                 required=True, multi=False, empty_is_none=True,  **kwargs):
         self.src = source_key or src
         self.dest = dest
         self.required = required
@@ -67,7 +67,11 @@ def opt(*args, **kwargs):
 
 
 def nopt(*args, **kwargs):
-    return item(*args, required=False, **kwargs)
+    return item(*args, empty_is_none=False, required=False, **kwargs)
+
+
+def nitem(*args, **kwargs):
+    return item(*args, empty_is_none=False, **kwargs)
 
 
 def get_item(it):
@@ -218,7 +222,10 @@ class ListMap(Map):
             return data.get(field.src)
         else:
             d = data.get(field.src)
-            return d and d[0] or None
+            if d:
+                return d[0]
+            else:
+                return None
 
 
 class KeyVal(Pipeable):

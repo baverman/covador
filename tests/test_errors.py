@@ -1,9 +1,9 @@
-from covador import schema, item
+from covador import schema, item, nitem
 from covador.errors import error_to_dict, error_to_json
 
 
 def test_error_to_dict():
-    s = schema(foo=schema(boo=int), bar=item([int]))
+    s = schema(foo=nitem(schema(boo=int)), bar=item([int]))
 
     try:
         s({'foo': {}, 'bar': [1, 'a']})
