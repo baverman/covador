@@ -1,4 +1,5 @@
-from .utils import wrap_in, ValidationDecorator, dpass
+from .utils import wrap_in, dpass
+from .vdecorator import ValidationDecorator
 from .types import *
 
 version = '0.9.15'

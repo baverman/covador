@@ -1,11 +1,12 @@
-from functools import wraps
+from functools import wraps, partial
 from asyncio import coroutine
 
 from aiohttp.web import Response
 
 from . import schema, list_schema
-from .utils import (merge_dicts, parse_qs, ValidationDecorator, Validator,
-                    ErrorContext, ErrorHandler)
+from .types import make_schema, AltMap
+from .utils import merge_dicts, parse_qs
+from .vdecorator import ValidationDecorator, Validator, ErrorHandler, ErrorContext
 from .errors import error_to_json
 
 
@@ -27,6 +28,22 @@ class AsyncValidator(Validator):
                 kwargs.update(data)
                 return (yield from func(*args, **kwargs))
         return inner
+
+
+def mergeof(*vdecorators):
+    first = vdecorators[0]
+
+    getters = [r.getter if isinstance(r.validator, AsyncValidator) else coroutine(r.getter)
+               for r in vdecorators]
+    schemas = [r.top_schema.schema for r in vdecorators]
+
+    @coroutine
+    def getter(*args, **kwargs):
+        return [(yield from g(*args, **kwargs)) for g in getters]
+
+    top_schema = make_schema(partial(AltMap, schemas))
+
+    return ValidationDecorator(getter, first.error_handler, top_schema, first.skip_args, AsyncValidator)
 
 
 def error_adapter(func):
@@ -69,11 +86,6 @@ def get_json(request):
     return (yield from request.json())
 
 
-@coroutine
-def _params(request, *_args, **_kwargs):
-    return merge_dicts(get_qs(request), (yield from get_form(request)))
-
-
 _query_string = lambda request, *_args, **_kwargs: get_qs(get_request(request))
 _form = lambda request, *_args, **_kwargs: get_form(get_request(request))
 _rparams = lambda request, *_args, **kwargs: request.match_info
@@ -81,6 +93,6 @@ _json_body = lambda request, *_args, **_kwargs: get_json(get_request(request))
 
 query_string = ValidationDecorator(_query_string, error_handler, list_schema)
 form = ValidationDecorator(_form, error_handler, list_schema, validator=AsyncValidator)
-params = ValidationDecorator(_params, error_handler, list_schema, validator=AsyncValidator)
+params = mergeof(query_string, form)
 rparams = ValidationDecorator(_rparams, error_handler, schema)
 json_body = ValidationDecorator(_json_body, error_handler, schema, validator=AsyncValidator)

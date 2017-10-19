@@ -554,6 +554,17 @@ class MergedMap(Pipeable):
         return result
 
 
+class AltMap(Map):
+    def __init__(self, alt_maps, items):
+        Map.__init__(self, items)
+        self.alt_maps = [vars(m)['get'] for m in alt_maps]
+
+    def get(self, data, item):
+        for d, m in zip(data, self.alt_maps):
+            if item.src in d:
+                return m(self, d, item)
+
+
 def make_schema(top_schema):
     def schema(*args, **kwargs):
         args = [r._adjust(top_schema) if isinstance(r, oneof) else top_schema(r)
@@ -572,4 +583,6 @@ def make_schema(top_schema):
             return s | tail
 
         return s
+
+    schema.schema = top_schema
     return schema
