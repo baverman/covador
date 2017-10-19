@@ -15,6 +15,7 @@ __all__ = ['Map', 'List', 'Tuple', 'Int', 'Str', 'Bool', 'split', 'Range',
            'timestamp', 'timestamp_msec', 'numbers', 'KeyVal']
 
 UNDEFINED = object()
+EMPTY_VALUES = b'', u''
 
 
 class item(object):
@@ -44,8 +45,8 @@ class item(object):
         return obj
 
     def __call__(self, data):
-        if self.empty_is_none:
-            data = data or None
+        if self.empty_is_none and data in EMPTY_VALUES:
+            data = None
         if data is None:
             if self.required:
                 raise RequiredExcepion()
@@ -63,7 +64,7 @@ class item(object):
 
 
 def opt(*args, **kwargs):
-    return item(*args, empty_is_none=True, required=False, **kwargs)
+    return item(*args, required=False, **kwargs)
 
 
 def nopt(*args, **kwargs):
