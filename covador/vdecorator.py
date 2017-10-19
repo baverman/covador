@@ -1,9 +1,14 @@
+import os
 import sys
+import logging
 from functools import wraps, partial
 
 from .compat import reraise
 from .utils import clone, pipe
 from .types import make_schema, AltMap
+
+DEBUG = os.environ.get('COVADOR_DEBUG')
+log = logging.getLogger('covador.bad-request')
 
 
 class ErrorContext(object):
@@ -11,6 +16,10 @@ class ErrorContext(object):
         self.args = args or ()
         self.kwargs = kwargs or {}
         self.exc_info = exc_info or sys.exc_info()
+        if DEBUG:  # pragma: no cover
+            log.error('Bad request: %r', self.exc_info[1], exc_info=self.exc_info)
+        else:
+            log.info('Bad request: %r', self.exc_info[1])
 
     def reraise(self, exception=None):
         if exception:

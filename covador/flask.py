@@ -26,7 +26,13 @@ def get_form():
     try:
         return request._covador_form
     except AttributeError:
-        form = request._covador_form = parse_qs(request.get_data(parse_form_data=False))
+        if request.content_type.startswith('multipart/form-data'):
+            form = request.form.to_dict(False)
+        elif request.content_type.startswith('application/x-www-form-urlencoded'):
+            form = parse_qs(request.get_data(parse_form_data=False))
+        else:
+            form = {}
+        request._covador_form = form
         return form
 
 

@@ -5,6 +5,8 @@ from flask import Flask
 from covador import opt
 from covador.flask import *
 
+from . import helpers
+
 app = Flask(__name__)
 
 
@@ -27,8 +29,17 @@ def test_get_form():
     def test(boo):
         return boo
 
-    with app.test_request_context(b'/', data=b'boo=foo'):
+    @form(p1=str, p2=int)
+    def mform(p1, p2):
+        return p1, p2
+
+    with app.test_request_context(b'/', data=b'boo=foo',
+                                  content_type='application/x-www-form-urlencoded'):
         assert test() == u'foo'
+        assert request._covador_form
+
+    with app.test_request_context(b'/', data=helpers.mform, content_type=helpers.mct):
+        assert mform() == (u'буу', 10)
         assert request._covador_form
 
     with app.test_request_context(b'/', data=b'boo='):
@@ -45,7 +56,8 @@ def test_get_params():
     def test(boo, foo):
         return boo, foo
 
-    with app.test_request_context(b'/?boo=baz', data=b'foo=10'):
+    with app.test_request_context(b'/?boo=baz', data=b'foo=10',
+                                  content_type='application/x-www-form-urlencoded'):
         assert test() == (u'baz', 10)
 
 

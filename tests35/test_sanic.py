@@ -14,6 +14,8 @@ from covador.sanic import json_body
 from covador.sanic import query_string
 from covador.sanic import m_query_string
 
+from . import helpers
+
 
 @pytest.yield_fixture
 def app():
@@ -93,6 +95,13 @@ def test_query_string_error(test_cli):
 @asyncio.coroutine
 def test_form(test_cli):
     resp = yield from test_cli.post('/form/', data={'a': 2})
+    assert resp.status == 200
+    resp_json = yield from resp.json()
+    assert resp_json == {'a': 2}
+
+    body, mct = helpers.encode_multipart([('a', '2')])
+    resp = yield from test_cli.post('/form/', data=body,
+                                    headers={'Content-Type': mct})
     assert resp.status == 200
     resp_json = yield from resp.json()
     assert resp_json == {'a': 2}

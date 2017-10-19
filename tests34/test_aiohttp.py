@@ -9,6 +9,10 @@ from aiohttp import web, streams
 from covador import item
 from covador.aiohttp import form, query_string, json_body, params, rparams
 
+from . import helpers
+
+FHEADERS = {'Content-Type': 'application/x-www-form-urlencoded'}
+
 
 @form(boo=int)
 @asyncio.coroutine
@@ -53,10 +57,10 @@ class HelloView(web.View):
 
 
 class Message:
-    def __init__(self, method, path):
+    def __init__(self, method, path, headers):
         self.method = method
         self.path = path
-        self.headers = multidict.CIMultiDict()
+        self.headers = multidict.CIMultiDict(headers)
         self.version = '1.1'
         self.url = yarl.URL(path)
 
@@ -65,13 +69,13 @@ class Protocol:
     transport = None
 
 
-def make_request(method, path, content=None):
+def make_request(method, path, content=None, headers=None):
     s = streams.StreamReader()
     if content:
         s.feed_data(content)
         s.feed_eof()
 
-    return web.Request(Message(method, path), s, Protocol, None, None, None)
+    return web.Request(Message(method, path, headers or {}), s, Protocol, None, None, None)
 
 
 @asyncio.coroutine
@@ -119,21 +123,34 @@ def test_error_get_qs():
 
 @with_loop
 def test_get_form():
-    response = yield from call(hello_post(make_request('POST', '/', b'boo=5')))
+    response = yield from call(hello_post(make_request('POST', '/', b'boo=5', FHEADERS)))
+    assert response.status == 200
+    assert response.text == 'Hello, world 5'
+
+
+@with_loop
+def test_get_multipart_form():
+    body, mct = helpers.encode_multipart([('boo', '5')])
+    headers = {'Content-Type': mct}
+    response = yield from call(hello_post(make_request('POST', '/', body, headers)))
     assert response.status == 200
     assert response.text == 'Hello, world 5'
 
 
 @with_loop
 def test_getpost():
-    response = yield from call(hello_getpost(make_request('POST', '/', b'boo=5')))
+    response = yield from call(hello_getpost(make_request('POST', '/', b'boo=5', FHEADERS)))
+    assert response.status == 200
+    assert response.text == 'Hello, world 5'
+
+    response = yield from call(hello_getpost(make_request('POST', '/?boo=5', b'foo')))
     assert response.status == 200
     assert response.text == 'Hello, world 5'
 
 
 @with_loop
 def test_error_get_form():
-    response = yield from call(hello_post(make_request('POST', '/', b'boo=foo')))
+    response = yield from call(hello_post(make_request('POST', '/', b'boo=foo', FHEADERS)))
     assert response.status == 400
     assert json.loads(response.text) == {
         'details': {
@@ -160,7 +177,7 @@ def test_m_query_string():
 
 @with_loop
 def test_m_form():
-    v = HelloView(make_request('GET', '', b'boo=5'))
+    v = HelloView(make_request('GET', '', b'boo=5', FHEADERS))
     response = yield from call(v.post())
     assert response.status == 200
     assert response.text == 'Hello, world 5'

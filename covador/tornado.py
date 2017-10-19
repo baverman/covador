@@ -27,7 +27,14 @@ def get_form(request):
     try:
         return request._covador_form
     except AttributeError:
-        result = request._covador_form = parse_qs(request.body)
+        content_type = request.headers.get('Content-Type', '')
+        if content_type.startswith('multipart/form-data'):
+            result = request.body_arguments
+        elif content_type.startswith('application/x-www-form-urlencoded'):
+            result = parse_qs(request.body)
+        else:
+            result = {}
+        request._covador_form = result
         return result
 
 

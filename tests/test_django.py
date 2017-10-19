@@ -7,6 +7,7 @@ from webob import Request as TRequest
 from django.core.handlers.wsgi import WSGIRequest
 
 from covador.django import *
+from . import helpers
 
 SECRET_KEY = 'boo'
 
@@ -35,12 +36,25 @@ def test_form():
     assert request._covador_form
 
 
+def test_mform():
+    @form(p1=str, p2=int)
+    def test(request, p1, p2):
+        return p1, p2
+
+    request = make_request('/', POST=helpers.mform, content_type=helpers.mct)
+    assert test(request) == (u'буу', 10)
+    assert request._covador_form
+
+
 def test_params():
     @params(boo=str, foo=int)
     def test(request, boo, foo):
         return boo, foo
 
     request = make_request('/?boo=boo', POST=b'foo=10')
+    assert test(request) == (u'boo', 10)
+
+    request = make_request('/?boo=boo&foo=10')
     assert test(request) == (u'boo', 10)
 
 
