@@ -6,7 +6,7 @@ import yarl
 from functools import wraps
 from aiohttp import web, streams
 
-from covador import item
+from covador import item, opt
 from covador.aiohttp import form, query_string, json_body, params, rparams
 
 from . import helpers
@@ -20,10 +20,10 @@ def hello_post(request, boo):
     return web.Response(text='Hello, world {}'.format(boo))
 
 
-@json_body(boo=int)
+@json_body(boo=opt(int))
 @asyncio.coroutine
 def hello_json(request, boo):
-    return web.Response(text='Hello, world {}'.format(boo))
+    return web.Response(text='Hello, world {}'.format(boo or 42))
 
 
 @query_string(boo=int)
@@ -71,7 +71,7 @@ class Protocol:
 
 def make_request(method, path, content=None, headers=None):
     s = streams.StreamReader()
-    if content:
+    if content is not None:
         s.feed_data(content)
         s.feed_eof()
 
@@ -162,9 +162,14 @@ def test_error_get_form():
 
 @with_loop
 def test_get_json():
-    response = yield from call(hello_json(make_request('POST', '/', b'{"boo": 5}')))
+    headers = {'Content-Type': 'application/json'}
+    response = yield from call(
+        hello_json(make_request('POST', '/', b'{"boo": 5}', headers)))
     assert response.status == 200
     assert response.text == 'Hello, world 5'
+
+    response = yield from call(hello_json(make_request('POST', '/', b'')))
+    assert response.text == 'Hello, world 42'
 
 
 @with_loop

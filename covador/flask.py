@@ -36,10 +36,16 @@ def get_form():
         return form
 
 
+def get_json():
+    if request.content_type.startswith('application/json'):
+        return request.get_json()
+    return {}
+
+
 _query_string = lambda *_args, **_kwargs: get_qs()
 _form = lambda *_args, **_kwargs: get_form()
 _rparams = lambda *_args, **kwargs: kwargs
-_json = lambda *_args, **_kwargs: request.get_json(force=True)
+_json = lambda *_args, **_kwargs: get_json()
 
 query_string = ValidationDecorator(_query_string, error_handler, list_schema)
 form = ValidationDecorator(_form, error_handler, list_schema)

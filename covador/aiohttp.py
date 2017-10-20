@@ -96,7 +96,9 @@ def get_form(request):
 
 @coroutine
 def get_json(request):
-    return (yield from request.json())
+    if request.content_type.startswith('application/json'):
+        return (yield from request.json())
+    return {}
 
 
 _query_string = lambda request, *_args, **_kwargs: get_qs(get_request(request))

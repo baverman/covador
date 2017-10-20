@@ -6,7 +6,9 @@ import json
 from webob import Request as TRequest
 from django.core.handlers.wsgi import WSGIRequest
 
+from covador import opt
 from covador.django import *
+
 from . import helpers
 
 SECRET_KEY = 'boo'
@@ -81,9 +83,10 @@ def test_error():
 
 
 def test_json_body():
-    @json_body(boo=str)
+    @json_body(boo=opt(str))
     def test(request, boo):
         return boo
 
     data = u'{"boo": "утф"}'.encode('utf-8')
-    assert test(make_request('/', POST=data)) == u'утф'
+    assert test(make_request('/', POST=data, content_type='application/json')) == u'утф'
+    assert test(make_request('/', POST=b'')) == None

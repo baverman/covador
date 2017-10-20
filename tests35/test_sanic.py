@@ -6,6 +6,7 @@ from sanic import Sanic
 from sanic import views
 from sanic import response
 
+from covador import opt
 from covador.sanic import form
 from covador.sanic import m_form
 from covador.sanic import params
@@ -34,7 +35,7 @@ def app():
         return response.json(kwargs)
 
     @app.route("/json/body/", methods=['POST'])
-    @json_body(a=int)
+    @json_body(a=opt(int))
     @asyncio.coroutine
     def test_json_body(request, **kwargs):
         return response.json(kwargs)
@@ -118,6 +119,10 @@ def test_json_body(test_cli):
     assert resp.status == 200
     resp_json = yield from resp.json()
     assert resp_json == {'a': 2}
+
+    resp = yield from test_cli.post('/json/body/', data=b'')
+    resp_json = yield from resp.json()
+    assert resp_json == {'a': None}
 
 
 @asyncio.coroutine

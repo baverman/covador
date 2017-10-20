@@ -46,10 +46,16 @@ def get_form(request):
         return form
 
 
+def get_json(request):
+    if request.content_type.startswith('application/json'):
+        return json.loads(ustr(request.body, request.encoding or 'utf-8'))
+    return {}
+
+
 _query_string = lambda request, *_args, **_kwargs: get_qs(request)
 _form = lambda request, *_args, **_kwargs: get_form(request)
 _rparams = lambda *_args, **kwargs: kwargs
-_json_body = lambda request, *_args, **_kwargs: json.loads(ustr(request.body, request.encoding or 'utf-8'))
+_json_body = lambda request, *_args, **_kwargs: get_json(request)
 
 query_string = ValidationDecorator(_query_string, error_handler, list_schema)
 form = ValidationDecorator(_form, error_handler, list_schema)

@@ -42,7 +42,12 @@ def get_json(request):
     try:
         return request._covador_json
     except AttributeError:
-        result = request._covador_json = json.loads(ustr(request.body, 'utf-8'))
+        content_type = request.headers.get('Content-Type', '')
+        if content_type.startswith('application/json'):
+            result = json.loads(ustr(request.body, 'utf-8'))
+        else:
+            result = {}
+        request._covador_json = result
         return result
 
 

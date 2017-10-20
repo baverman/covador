@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from tornado import web
 from tornado.httputil import HTTPServerRequest
 
-from covador import item, wrap_in, dpass
+from covador import item, wrap_in, dpass, opt
 from covador.tornado import query_string, form, json_body, rparams, params
 
 from .import helpers
@@ -81,14 +81,19 @@ def test_mform():
 
 def test_json():
     class Handler(web.RequestHandler):
-        @json_body(foo=str)
+        @json_body(foo=opt(str))
         def post(self, foo):
-            return foo
+            return foo or 'None'
 
     data = u'{"foo": "утф"}'.encode('utf-8')
-    with request(Handler, 'POST', '/', body=data) as (h, _):
+    headers = {'Content-Type': 'application/json'}
+    with request(Handler, 'POST', '/', body=data, headers=headers) as (h, _):
         data = h.post()
         assert data == u'утф'
+
+    with request(Handler, 'POST', '/', body=b'') as (h, _):
+        data = h.post()
+        assert data == 'None'
 
 
 def test_params():

@@ -71,10 +71,14 @@ def test_get_rparams():
 
 
 def test_json():
-    @json_body(boo=int, foo=str)
+    @json_body(boo=opt(int), foo=opt(str))
     def test(boo, foo):
         return boo, foo
 
     data = u'{"boo": "10", "foo": "утф"}'
-    with app.test_request_context(b'/', data=data.encode('utf-8')):
+    with app.test_request_context(b'/', data=data.encode('utf-8'),
+                                  content_type='application/json'):
         assert test() == (10, u'утф')
+
+    with app.test_request_context(b'/', data=b''):
+        assert test() == (None, None)
