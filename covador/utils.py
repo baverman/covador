@@ -1,7 +1,6 @@
-import sys
-from functools import wraps, partial
+from functools import partial
 
-from .compat import PY2, ustr, bstr, btype, utype, urlparse, reraise
+from .compat import PY2, ustr, bstr, urlparse
 
 
 def merge_dicts(*dicts, **kwargs):

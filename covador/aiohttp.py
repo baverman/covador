@@ -5,7 +5,7 @@ from aiohttp.web import Response
 
 from . import schema, list_schema
 from .types import make_schema, AltMap
-from .utils import merge_dicts, parse_qs
+from .utils import parse_qs
 from .vdecorator import ValidationDecorator, Validator, ErrorHandler, ErrorContext
 from .errors import error_to_json
 
@@ -103,7 +103,7 @@ def get_json(request):
 
 _query_string = lambda request, *_args, **_kwargs: get_qs(get_request(request))
 _form = lambda request, *_args, **_kwargs: get_form(get_request(request))
-_rparams = lambda request, *_args, **kwargs: request.match_info
+_rparams = lambda request, *_args, **_kwargs: request.match_info
 _json_body = lambda request, *_args, **_kwargs: get_json(get_request(request))
 
 query_string = ValidationDecorator(_query_string, error_handler, list_schema)
