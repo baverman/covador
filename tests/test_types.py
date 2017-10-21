@@ -353,3 +353,14 @@ def test_nopt_in_schema():
     assert schema(boo=nopt(bool, True))({'boo': ''}) == {'boo': False}
     assert list_schema(boo=nopt(bool, True))({'boo': ['']}) == {'boo': False}
 
+
+def test_check():
+    assert check(str.isdigit)('1') == '1'
+
+    with pytest.raises(ValueError) as ei:
+        check(str.isdigit)('a')
+    assert str(ei.value) == 'Invalid check'
+
+    with pytest.raises(ValueError) as ei:
+        check(str.isdigit, 'Must be a digit')('a')
+    assert str(ei.value) == 'Must be a digit'

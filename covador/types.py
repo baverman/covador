@@ -12,7 +12,7 @@ __all__ = ['Map', 'List', 'Tuple', 'Int', 'Str', 'Bool', 'split', 'Range',
            'email', 'url', 'uuid', 'item', 'nitem', 'opt', 'nopt', 'Invalid', 'RequiredExcepion',
            'RangeException', 'RegexException', 'LengthException', 'EnumException',
            'oneof', 'make_schema', 'DateTime', 'Date', 'Time', 'Timestamp',
-           'timestamp', 'timestamp_msec', 'numbers', 'KeyVal']
+           'timestamp', 'timestamp_msec', 'numbers', 'KeyVal', 'check']
 
 UNDEFINED = object()
 EMPTY_VALUES = b'', u''
@@ -400,6 +400,17 @@ class length(Pipeable):
         if self.max is not None and size > self.max:
             raise LengthException(data, max=self.max)
         return data
+
+
+class check(Pipeable):
+    def __init__(self, checker, message=None):
+        self.checker = checker
+        self.message = message or 'Invalid check'
+
+    def __call__(self, data):
+        if self.checker(data):
+            return data
+        raise ValueError(self.message)
 
 
 class Numbers(Pipeable):
