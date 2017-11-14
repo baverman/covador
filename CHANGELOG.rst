@@ -1,3 +1,28 @@
+0.9.16
+======
+
+* [Break] IMPORTANT!! ``empty_is_none`` consider empty strings only. For example,
+  ``schema(price=int)({'price': 0})`` does not raises Required Item exception
+  anymore.
+
+* [Feature/Break] Strict parsing for ``application/x-www-form-urlencoded``,
+  ``multipart/form-data`` and ``application/json`` content types.
+
+* [Feature] ``covador.vdecorator.mergeof`` validation decorator compositor.
+  For example, all ``params`` decorators are ``mergeof(query_string, form)``.
+
+* [Feature] Support for ``multipart/form-data`` content type.
+
+* [Feature] Assume empty dictionary for ``json_body`` in case of empty request body.
+
+* [Feature] ``covador.check`` allows to create validators from boolean functions.
+
+* [Feature] Log invalid inputs for validation decorators. One can use
+  ``COVADOR_DEBUG`` environment variable to enable stack traces in logs.
+
+* [Refactor] Extract ``covador.vdecorator`` module from ``covador.utils``.
+
+
 0.9.15
 ======
 
