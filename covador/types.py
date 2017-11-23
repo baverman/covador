@@ -29,6 +29,8 @@ class item(object):
         self.empty_is_none = empty_is_none
         self.__dict__.update(kwargs)
         self.typ = typ and wrap_type(typ)
+        if multi and self.typ:
+            self.typ = List(self.typ)
         self.pipe = []
 
     def clone(self):

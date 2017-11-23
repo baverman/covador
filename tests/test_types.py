@@ -200,8 +200,8 @@ def test_length():
 
 
 def test_multi_map():
-    s = ListMap({'foo': int, 'boo': item(multi=True)})
-    result = s({'foo': ['10'], 'boo': [1, 2]})
+    s = ListMap({'foo': int, 'boo': item(int, multi=True)})
+    result = s({'foo': ['10'], 'boo': [1, '2']})
     assert result == {'foo': 10, 'boo': [1, 2]}
 
 
