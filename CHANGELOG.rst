@@ -1,3 +1,9 @@
+0.9.17
+======
+
+* [Fix] Ensure ``List`` validator for items with ``multi=True``.
+
+
 0.9.16
 ======
 
