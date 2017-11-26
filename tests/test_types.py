@@ -287,6 +287,8 @@ def test_oneof():
     assert s(10) == 10
     assert s('boo') == u'boo'
 
+    assert (oneof(Int(), Str()) | type(u'').upper)(b'boo') == u'BOO'
+
 
 def test_datetime():
     assert DateTime()('2016-02-05 12:45:03') == dt.datetime(2016, 2, 5, 12, 45, 3)

@@ -526,7 +526,7 @@ def wrap_type(typ):
     return ALIASES.get(typ, typ)
 
 
-class oneof(object):
+class oneof(Pipeable):
     def __init__(self, *alternatives):
         self.alternatives = alternatives
         self.blank = None

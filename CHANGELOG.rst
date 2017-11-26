@@ -1,3 +1,9 @@
+0.9.18dev
+=========
+
+* [Fix] missing pipeable support for ``oneof``.
+
+
 0.9.17
 ======
 
