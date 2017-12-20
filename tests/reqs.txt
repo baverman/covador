@@ -1,4 +1,4 @@
 Flask
 tornado
 WebOb
-Django
+Django<2.0
