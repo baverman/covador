@@ -1,0 +1,6 @@
+ARG IMAGE
+FROM ${IMAGE}
+
+ARG PYVERSION
+ADD . /app
+RUN cd /app && ./travis-install.sh $PYVERSION

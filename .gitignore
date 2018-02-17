@@ -10,3 +10,4 @@ TODO
 .idea
 /docs/_build
 article*
+/.pytest_cache

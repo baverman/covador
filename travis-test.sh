@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 pyversion=$1
 shift
