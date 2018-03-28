@@ -3,4 +3,5 @@ FROM ${IMAGE}
 
 ARG PYVERSION
 ADD . /app
+RUN apk --no-cache add build-base linux-headers
 RUN cd /app && ./travis-install.sh $PYVERSION
