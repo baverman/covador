@@ -1,4 +1,5 @@
 #!/bin/sh
 
 pip install pytest-cov==2.3.1
-ls targets/$1/*/reqs.txt | xargs -n1 pip install -r
+cat targets/$1/*/reqs.txt > /tmp/reqs.txt
+pip install -r /tmp/reqs.txt -c targets/$1/cnst.txt

@@ -24,12 +24,12 @@ from covador.django import query_string, json_body
 
 @query_string(foo=item(json.loads) | schema(boo=int), bar=item([int], multi=True))
 def test_qs(request, foo, bar):
-    return HttpResponse('foo is {}, bar is {}'.format(foo, bar))
+    return HttpResponse('foo is {0}, bar is {1}'.format(foo, bar))
 
 
 @json_body(foo=int, bar=[int])
 def test_json(request, foo, bar):
-    return HttpResponse('foo is {}, bar is {}'.format(foo, bar))
+    return HttpResponse('foo is {0}, bar is {1}'.format(foo, bar))
 
 
 urlpatterns = [

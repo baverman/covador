@@ -19,7 +19,7 @@ def encode_multipart(fields, boundary=None):
     for name, value in fields:
         lines.extend((
             b'--' + boundary,
-            u'Content-Disposition: form-data; name="{}"'.format(
+            u'Content-Disposition: form-data; name="{0}"'.format(
                 escape_quote(name).decode('latin1')).encode('latin1'),
             b'',
             bstr(value, 'utf-8'),
@@ -30,7 +30,7 @@ def encode_multipart(fields, boundary=None):
         b'',
     ))
     body = b'\r\n'.join(lines)
-    return (body, 'multipart/form-data; boundary={}'.format(boundary.decode('latin1')))
+    return (body, 'multipart/form-data; boundary={0}'.format(boundary.decode('latin1')))
 
 
 mform, mct = encode_multipart([('p1', u'буу'), ('p2', '10')])

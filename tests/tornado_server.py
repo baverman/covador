@@ -13,12 +13,12 @@ class MainHandler(tornado.web.RequestHandler):
     @tornado.gen.coroutine
     @query_string(foo=item(json.loads) | schema(boo=int), bar=item([int], multi=True))
     def get(self, foo, bar):
-        self.write('foo is {}, bar is {}'.format(foo, bar))
+        self.write('foo is {0}, bar is {1}'.format(foo, bar))
 
     @tornado.gen.coroutine
     @json_body(foo=int, bar=[int])
     def post(self, foo, bar):
-        self.write('foo is {}, bar is {}'.format(foo, bar))
+        self.write('foo is {0}, bar is {1}'.format(foo, bar))
 
 
 def make_app():

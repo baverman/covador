@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from functools import wraps
 import json
+import cgi
 
 from django import http
 
@@ -32,13 +33,23 @@ def get_qs(request):
         return qs
 
 
+def get_content_type(request):
+    try:
+        content_type = request.content_type
+    except AttributeError:  # pragma: no cover
+        content_type, _ = cgi.parse_header(
+            request.META.get('CONTENT_TYPE', ''))
+    return content_type
+
+
 def get_form(request):
     try:
         return request._covador_form
     except AttributeError:
-        if request.content_type.startswith('multipart/form-data'):
+        content_type = get_content_type(request)
+        if content_type.startswith('multipart/form-data'):
             form = dict(request.POST.lists())
-        elif request.content_type.startswith('application/x-www-form-urlencoded'):
+        elif content_type.startswith('application/x-www-form-urlencoded'):
             form = parse_qs(request.body)
         else:
             form = {}
@@ -47,7 +58,7 @@ def get_form(request):
 
 
 def get_json(request):
-    if request.content_type.startswith('application/json'):
+    if get_content_type(request).startswith('application/json'):
         return json.loads(ustr(request.body, request.encoding or 'utf-8'))
     return {}
 

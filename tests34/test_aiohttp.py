@@ -17,43 +17,43 @@ FHEADERS = {'Content-Type': 'application/x-www-form-urlencoded'}
 @form(boo=int)
 @asyncio.coroutine
 def hello_post(request, boo):
-    return web.Response(text='Hello, world {}'.format(boo))
+    return web.Response(text='Hello, world {0}'.format(boo))
 
 
 @json_body(boo=opt(int))
 @asyncio.coroutine
 def hello_json(request, boo):
-    return web.Response(text='Hello, world {}'.format(boo or 42))
+    return web.Response(text='Hello, world {0}'.format(boo or 42))
 
 
 @query_string(boo=int)
 @asyncio.coroutine
 def hello_get(request, boo):
-    return web.Response(text='Hello, world {}'.format(boo))
+    return web.Response(text='Hello, world {0}'.format(boo))
 
 
 @rparams(foo=item(int, src='boo'))
 @asyncio.coroutine
 def hello_rget(request, foo):
-    return web.Response(text='Hello, world {}'.format(repr(foo)))
+    return web.Response(text='Hello, world {0}'.format(repr(foo)))
 
 
 @params(boo=int)
 @asyncio.coroutine
 def hello_getpost(request, boo):
-    return web.Response(text='Hello, world {}'.format(boo))
+    return web.Response(text='Hello, world {0}'.format(boo))
 
 
 class HelloView(web.View):
     @query_string(boo=int)
     @asyncio.coroutine
     def get(self, boo):
-        return web.Response(text='Hello, world {}'.format(boo))
+        return web.Response(text='Hello, world {0}'.format(boo))
 
     @form(boo=int)
     @asyncio.coroutine
     def post(self, boo):
-        return web.Response(text='Hello, world {}'.format(boo))
+        return web.Response(text='Hello, world {0}'.format(boo))
 
 
 class Message:
@@ -115,7 +115,7 @@ def test_error_get_qs():
     assert response.status == 400
     assert json.loads(response.text) == {
         'details': {
-            'boo': "invalid literal for int() with base 10: {}".format(repr(b'foo'))
+            'boo': "invalid literal for int() with base 10: {0}".format(repr(b'foo'))
         },
         'error': 'bad-request'
     }

@@ -17,7 +17,7 @@ class EnumException(ValueError):
     def __init__(self, value, enum):
         self.value = value
         self.enum = enum
-        ValueError.__init__(self, '{} not in {}'.format(repr(value), enum))
+        ValueError.__init__(self, '{0} not in {1}'.format(repr(value), enum))
 
 
 class LengthException(ValueError):
@@ -28,9 +28,9 @@ class LengthException(ValueError):
 
         size = len(value or '')
         if min is not None:
-            ValueError.__init__(self, 'Length of {} is less then {}'.format(size, min))
+            ValueError.__init__(self, 'Length of {0} is less then {1}'.format(size, min))
         else:
-            ValueError.__init__(self, 'Length of {} is greater then {}'.format(size, max))
+            ValueError.__init__(self, 'Length of {0} is greater then {1}'.format(size, max))
 
 
 class RangeException(ValueError):
@@ -40,21 +40,21 @@ class RangeException(ValueError):
         self.max = max
 
         if min is not None:
-            ValueError.__init__(self, '{} is less then {}'.format(value, min))
+            ValueError.__init__(self, '{0} is less then {1}'.format(value, min))
         else:
-            ValueError.__init__(self, '{} is greater then {}'.format(value, max))
+            ValueError.__init__(self, '{0} is greater then {1}'.format(value, max))
 
 
 class RegexException(ValueError):
     def __init__(self, value, regex):
         self.value = value
         self.regex = regex
-        ValueError.__init__(self, 'Mismatch "{}" for "{}"'.format(value, regex.pattern))
+        ValueError.__init__(self, 'Mismatch "{0}" for "{1}"'.format(value, regex.pattern))
 
 
 def error_to_dict(exc):
     if isinstance(exc, Invalid):
-        return {key: error_to_dict(error) for key, error in exc.errors}
+        return dict((key, error_to_dict(error)) for key, error in exc.errors)
     else:
         return str(exc)
 

@@ -1,7 +1,9 @@
 0.9.18dev
 =========
 
+* [Feature] python 2.6 support
 * [Fix] missing pipeable support for ``oneof``.
+* [Fix] django support
 
 
 0.9.17
