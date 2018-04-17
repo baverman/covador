@@ -1,5 +1,5 @@
-0.9.18dev
-=========
+0.9.18
+======
 
 * [Feature] python 2.6 support
 * [Fix] missing pipeable support for ``oneof``.
