@@ -1,7 +1,7 @@
 from functools import wraps, partial
 from asyncio import coroutine
 
-from aiohttp.web import Response
+from aiohttp.web import HTTPBadRequest
 
 from . import schema, list_schema
 from .types import make_schema, AltMap
@@ -56,8 +56,8 @@ def error_adapter(func):
 @ErrorHandler
 @error_adapter
 def error_handler(_request, ctx):
-    return Response(body=error_to_json(ctx.exception), status=400,
-                    content_type='application/json')
+    raise HTTPBadRequest(body=error_to_json(ctx.exception),
+                         content_type='application/json')
 
 
 def get_qs(request):
@@ -103,7 +103,7 @@ def get_json(request):
 
 _query_string = lambda request, *_args, **_kwargs: get_qs(get_request(request))
 _form = lambda request, *_args, **_kwargs: get_form(get_request(request))
-_rparams = lambda request, *_args, **_kwargs: request.match_info
+_rparams = lambda request, *_args, **_kwargs: get_request(request).match_info
 _json_body = lambda request, *_args, **_kwargs: get_json(get_request(request))
 
 query_string = ValidationDecorator(_query_string, error_handler, list_schema)

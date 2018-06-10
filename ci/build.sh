@@ -1,8 +1,14 @@
 #!/bin/bash
 set -e
 pyimage=${1:?Image is required}
-pyver=${2:?Version is required}
-tar -hcf - --sort=name ci/Dockerfile.test travis-install.sh targets/$pyver/*/reqs.txt targets/$pyver/cnst.txt \
-    | docker build --build-arg IMAGE=$pyimage --build-arg PYVERSION=$pyver -t covador-$pyver -f ci/Dockerfile.test -
+user=$(id -u):$(id -g)
+
+docker build --build-arg IMAGE=$pyimage -t covador -f ci/Dockerfile.test build
 find -name '*.pyc' -delete
-docker run --rm -w /build -e PYTHONPATH=/build -u $UID:$GROUPS -v $PWD:/build covador-$pyver ./travis-test.sh $pyver
+docker run --rm -w /build -e PYTHONPATH=/build -u $user -v $PWD:/build -v /tmp:/tmp covador ./ci/test.sh
+docker run --rm -w /build \
+           -e PIP_OPTS="--cache-dir=/tmp/pip_cache" \
+           -e PYTHONPATH=/build \
+           -u $user -v $PWD:/build -v /tmp:/tmp \
+           covador ./ci/test-integration.sh
+

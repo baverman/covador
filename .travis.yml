@@ -6,6 +6,8 @@ python:
   - "3.5"
   - "3.6"
   - "pypy"
-install: ./travis-install.sh $TRAVIS_PYTHON_VERSION
+install:
+    - pip install pytest-cov requests
 script:
-    - ./travis-test.sh $TRAVIS_PYTHON_VERSION
+    - ./ci/test.sh
+    - ./ci/test-integration.sh

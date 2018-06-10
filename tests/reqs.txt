@@ -1,4 +1,0 @@
-Flask
-tornado
-WebOb
-Django<1.9

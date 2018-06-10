@@ -2,7 +2,8 @@ import pytest
 
 from covador import schema, dpass
 from covador.types import *
-from covador.vdecorator import ErrorHandler, ErrorContext, ValidationDecorator
+from covador.vdecorator import (ErrorHandler, ErrorContext,
+                                ValidationDecorator, mergeof)
 
 
 def test_error_context():
@@ -105,3 +106,19 @@ def test_validator_with_pipe():
 
     boo({'arg': 1})
     assert boo.called
+
+
+def test_validator_merge():
+    getter0 = lambda it: it[0]
+    getter1 = lambda it: it[1]
+
+    v0 = ValidationDecorator(getter0, None, schema)
+    v1 = ValidationDecorator(getter1, None, schema)
+    v = mergeof(v0, v1)
+
+    @v(arg=int)
+    def boo(_, arg):
+        boo.called = True
+        assert arg in (2, 3)
+
+    boo([{}, {'arg': 3}])

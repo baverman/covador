@@ -26,9 +26,10 @@ def get_form():
     try:
         return request._covador_form
     except AttributeError:
-        if request.content_type.startswith('multipart/form-data'):
+        ctype = request.content_type or ''
+        if ctype.startswith('multipart/form-data'):
             form = request.form.to_dict(False)
-        elif request.content_type.startswith('application/x-www-form-urlencoded'):
+        elif ctype.startswith('application/x-www-form-urlencoded'):
             form = parse_qs(request.get_data(parse_form_data=False))
         else:
             form = {}
@@ -37,7 +38,8 @@ def get_form():
 
 
 def get_json():
-    if request.content_type.startswith('application/json'):
+    ctype = request.content_type or ''
+    if ctype.startswith('application/json'):
         return request.get_json()
     return {}
 

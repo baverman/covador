@@ -2,7 +2,6 @@ ARG IMAGE
 FROM ${IMAGE}
 
 ARG PYVERSION
-RUN apk --no-cache add build-base linux-headers
+RUN apk --no-cache add build-base linux-headers bash
 
-ADD . /app
-RUN cd /app && ./travis-install.sh $PYVERSION
+RUN pip install pytest pytest-cov requests

@@ -1,9 +1,21 @@
 from __future__ import absolute_import
 
 from sanic import response
-from . import schema, list_schema
+from . import schema
+from .types import Map, make_schema
 from .vdecorator import ValidationDecorator, ErrorHandler, mergeof
 from .errors import error_to_json
+
+
+class SanicMap(Map):
+    def get(self, data, field):
+        if field.multi:
+            return data.getlist(field.src)
+        else:
+            return data.get(field.src)
+
+
+list_schema = make_schema(SanicMap)
 
 
 @ErrorHandler
