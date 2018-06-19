@@ -8,7 +8,7 @@ import tornado.web
 import tornado.gen
 
 from covador import schema, item
-from covador.tornado import query_string, json_body, form, params, rparams
+from covador.tornado import query_string, json_body, form, params, args
 
 
 class QSHandler(tornado.web.RequestHandler):
@@ -32,9 +32,9 @@ class ParamsHandler(tornado.web.RequestHandler):
         self.write(u'{0}.{1}'.format(p1, p2))
 
 
-class RParamsHandler(tornado.web.RequestHandler):
+class ArgsHandler(tornado.web.RequestHandler):
     @tornado.gen.coroutine
-    @rparams(boo=str)
+    @args(boo=str)
     def get(self, boo):
         self.write(boo)
 
@@ -51,7 +51,7 @@ def make_app():
         (r"/qs/", QSHandler),
         (r"/form/", FormHandler),
         (r"/params/", ParamsHandler),
-        (r"/rparams/(?P<boo>.+)/", RParamsHandler),
+        (r"/args/(?P<boo>.+)/", ArgsHandler),
         (r"/json/", JsonHandler),
     ], debug=False)
 

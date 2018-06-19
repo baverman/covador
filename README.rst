@@ -34,7 +34,7 @@ Validation library for processing http endpoint arguments.
 
 
 * Support for flask, django, aiohttp, tornado and sanic.
-* Simple creating of custom ``query_string``/``form``/``params``/``json_body``/``rparams`` wrappers.
+* Simple creating of custom ``query_string``/``form``/``params``/``json_body``/``args`` wrappers.
 * Multi dict support via item ``multi`` param.
 * Multi dict keys support via item ``src`` param.
 * Simple interface for custom validators/processors it's just a callable.

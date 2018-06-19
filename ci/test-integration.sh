@@ -50,7 +50,7 @@ for frm in ${!frameworks_key}; do
     for pkg in ${!f_key}; do
         echo
         echo "### Testing $pkg"
-        pip install $PIP_OPTS --target=/tmp/covador-$pyver-$pkg $pkg | cat
+        pip --disable-pip-version-check --exists-action=i install $PIP_OPTS --target=/tmp/covador-$pyver-$pkg $pkg | cat
         PYTHONPATH=$PYTHONPATH:/tmp/covador-$pyver-$pkg python -m pytest integration -k test_$frm
         COVERAGE_FILE=$frm.cov coverage report -m --fail-under=100 --include covador/${!cover_key}.py
     done

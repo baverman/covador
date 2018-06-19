@@ -103,11 +103,11 @@ def get_json(request):
 
 _query_string = lambda request, *_args, **_kwargs: get_qs(get_request(request))
 _form = lambda request, *_args, **_kwargs: get_form(get_request(request))
-_rparams = lambda request, *_args, **_kwargs: get_request(request).match_info
+_args = lambda request, *_args, **_kwargs: get_request(request).match_info
 _json_body = lambda request, *_args, **_kwargs: get_json(get_request(request))
 
 query_string = ValidationDecorator(_query_string, error_handler, list_schema)
 form = ValidationDecorator(_form, error_handler, list_schema, validator=AsyncValidator)
 params = mergeof(query_string, form)
-rparams = ValidationDecorator(_rparams, error_handler, schema)
+args = ValidationDecorator(_args, error_handler, schema)
 json_body = ValidationDecorator(_json_body, error_handler, schema, validator=AsyncValidator)

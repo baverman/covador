@@ -65,17 +65,17 @@ def get_json(request):
 
 _query_string = lambda request, *_args, **_kwargs: get_qs(request)
 _form = lambda request, *_args, **_kwargs: get_form(request)
-_rparams = lambda *_args, **kwargs: kwargs
+_args = lambda *_args, **kwargs: kwargs
 _json_body = lambda request, *_args, **_kwargs: get_json(request)
 
 query_string = ValidationDecorator(_query_string, error_handler, list_schema)
 form = ValidationDecorator(_form, error_handler, list_schema)
 params = mergeof(query_string, form)
-rparams = ValidationDecorator(_rparams, error_handler, schema)
+args = ValidationDecorator(_args, error_handler, schema)
 json_body = ValidationDecorator(_json_body, error_handler, schema)
 
 m_query_string = ValidationDecorator(_query_string, error_handler, list_schema, 1)
 m_form = ValidationDecorator(_form, error_handler, list_schema, 1)
 m_params = mergeof(m_query_string, m_form)
-m_rparams = ValidationDecorator(_rparams, error_handler, schema, 1)
+m_args = ValidationDecorator(_args, error_handler, schema, 1)
 m_json_body = ValidationDecorator(_json_body, error_handler, schema, 1)

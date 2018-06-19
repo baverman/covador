@@ -1,7 +1,7 @@
 import sys; sys.path.insert(0, '.')
 from aiohttp import web
 
-from covador.aiohttp import query_string, json_body, form, params, rparams
+from covador.aiohttp import query_string, json_body, form, params, args
 
 
 @query_string(boo=str)
@@ -19,8 +19,8 @@ async def params_view(request, p1, p2):
     return web.Response(text='{0}.{1}'.format(p1, p2))
 
 
-@rparams(boo=str)
-async def rparams_view(request, boo):
+@args(boo=str)
+async def args_view(request, boo):
     return web.Response(text=boo)
 
 
@@ -34,7 +34,7 @@ def main():
     app.router.add_get('/qs/', qs_view)
     app.router.add_post('/form/', form_view)
     app.router.add_post('/params/', params_view)
-    app.router.add_get('/rparams/{boo}/', rparams_view)
+    app.router.add_get('/args/{boo}/', args_view)
     app.router.add_post('/json/', json_view)
 
     try:

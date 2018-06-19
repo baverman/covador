@@ -87,8 +87,8 @@ def do_tests():
                          params={'p2': 10}, data={'p1': 'boo'})
     assert resp.content == b'boo.10'
 
-    # rparams
-    resp = requests.get('http://127.0.0.1:5000/rparams/boo/')
+    # args
+    resp = requests.get('http://127.0.0.1:5000/args/boo/')
     assert resp.content == b'boo'
 
     # error

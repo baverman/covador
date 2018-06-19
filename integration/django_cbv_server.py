@@ -15,7 +15,7 @@ from django.conf.urls import url
 from django.http import HttpResponse
 from django.views.generic import View
 
-from covador.django import m_query_string, m_form, m_params, m_rparams, m_json_body
+from covador.django import m_query_string, m_form, m_params, m_args, m_json_body
 
 
 class QS(View):
@@ -36,8 +36,8 @@ class Params(View):
         return HttpResponse(u'{0}.{1}'.format(p1, p2))
 
 
-class RParams(View):
-    @m_rparams(boo=str)
+class Args(View):
+    @m_args(boo=str)
     def get(self, request, boo):
         return HttpResponse(boo)
 
@@ -52,7 +52,7 @@ urlpatterns = [
     url(r'^qs/', QS.as_view()),
     url(r'^form/', Form.as_view()),
     url(r'^params/', Params.as_view()),
-    url(r'^rparams/(?P<boo>.+)/', RParams.as_view()),
+    url(r'^args/(?P<boo>.+)/', Args.as_view()),
     url(r'^json/', JSON.as_view()),
 ]
 

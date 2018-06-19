@@ -3,7 +3,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 from flask import Flask
-from covador.flask import query_string, json_body, form, params, rparams
+from covador.flask import query_string, json_body, form, params, args
 
 app = Flask(__name__)
 app._logger = logging.getLogger(__name__)
@@ -27,9 +27,9 @@ def params_view(p1, p2):
     return u'{0}.{1}'.format(p1, p2)
 
 
-@app.route('/rparams/<boo>/')
-@rparams(boo=str)
-def rparams_view(boo):
+@app.route('/args/<boo>/')
+@args(boo=str)
+def args_view(boo):
     return boo
 
 

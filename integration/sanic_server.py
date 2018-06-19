@@ -4,7 +4,7 @@ logging.basicConfig(level=logging.INFO)
 
 from sanic import Sanic, response
 from covador import item
-from covador.sanic import query_string, json_body, form, params, rparams
+from covador.sanic import query_string, json_body, form, params, args
 
 app = Sanic()
 
@@ -33,9 +33,9 @@ async def params_view(request, p1, p2):
     return response.text('{0}.{1}'.format(p1, p2))
 
 
-@app.route('/rparams/<boo>/')
-@rparams(boo=str)
-async def rparams_view(request, boo):
+@app.route('/args/<boo>/')
+@args(boo=str)
+async def args_view(request, boo):
     return response.text(boo)
 
 

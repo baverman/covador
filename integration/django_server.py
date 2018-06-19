@@ -14,7 +14,7 @@ from django.core.wsgi import get_wsgi_application
 from django.conf.urls import url
 from django.http import HttpResponse
 
-from covador.django import query_string, json_body, form, params, rparams
+from covador.django import query_string, json_body, form, params, args
 
 
 @query_string(boo=str)
@@ -32,8 +32,8 @@ def params_view(request, p1, p2):
     return HttpResponse(u'{0}.{1}'.format(p1, p2))
 
 
-@rparams(boo=str)
-def rparams_view(request, boo):
+@args(boo=str)
+def args_view(request, boo):
     return HttpResponse(boo)
 
 
@@ -46,7 +46,7 @@ urlpatterns = [
     url(r'^qs/', qs_view),
     url(r'^form/', form_view),
     url(r'^params/', params_view),
-    url(r'^rparams/(?P<boo>.+)/', rparams_view),
+    url(r'^args/(?P<boo>.+)/', args_view),
     url(r'^json/', json_view),
 ]
 
