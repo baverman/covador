@@ -19,13 +19,17 @@ def server(covfile, module_name, append_coverage=False):
         cov = coverage.Coverage(covfile, source=['covador'])
         cov._auto_load = append_coverage
         cov.start()
+        print('Server starting...')
         try:
             __import__(module_name)
             module = sys.modules[module_name]
             module.main()
+            print('Server stopped')
         except:
             import traceback
             traceback.print_exc()
+        sys.stdout.flush()
+        sys.stderr.flush()
         cov.stop()
         cov.save()
         os._exit(0)
@@ -56,6 +60,7 @@ def server(covfile, module_name, append_coverage=False):
                 break
 
         if not killed:
+            print('Server did not stoped on SIGINT, sending SIGKILL')
             os.kill(pid, 9)
 
 
