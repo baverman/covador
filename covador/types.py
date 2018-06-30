@@ -2,7 +2,7 @@
 import re
 from datetime import datetime
 
-from .utils import Pipeable, clone, ensure_context
+from .utils import Pipeable, clone, ensure_context, merge_dicts
 from .compat import utype, btype, stype, ustr, str_map, str_coerce, bstr, PY2
 from .errors import (Invalid, RequiredExcepion, RangeException, RegexException,
                      LengthException, EnumException)
@@ -418,7 +418,7 @@ class check(Pipeable):
 class Numbers(Pipeable):
     def __init__(self):
         self.empty = str_map('')
-        self.re = str_map('\d+')
+        self.re = str_map(r'\d+')
 
     def __call__(self, data):
         t = type(data)
@@ -455,7 +455,7 @@ class regex(Pipeable):
         return data
 
 
-email = Str() | regex("(?i)^[A-Z0-9._%!#$%&'*+-/=?^_`{|}~()]+@[A-Z0-9]+([.-][A-Z0-9]+)*\.[A-Z]{2,22}$")
+email = Str() | regex(r"(?i)^[A-Z0-9._%!#$%&'*+-/=?^_`{|}~()]+@[A-Z0-9]+([.-][A-Z0-9]+)*\.[A-Z]{2,22}$")
 
 URL_REGEX = r"""(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))"""
 url = Str() | regex(URL_REGEX)
@@ -588,7 +588,13 @@ def make_schema(top_schema):
             if len(args) == 1 and not kwargs:
                 s = args[0]
             else:
-                s = MergedMap(args + [top_schema(kwargs)])
+                if (issubclass(top_schema, Map)
+                        and all(isinstance(r, top_schema) for r in args)):
+                    arg_items = [r.items for r in args]
+                    merged_items = merge_dicts(*arg_items, **kwargs)
+                    s = top_schema(merged_items)
+                else:
+                    s = MergedMap(args + [top_schema(kwargs)])
         else:
             s = top_schema(kwargs)
 

@@ -2,7 +2,7 @@
 import pytest
 
 from covador import schema
-from covador.types import List, Int
+from covador.types import List, Int, Map
 from covador.compat import urlencode, ustr, bstr
 from covador.utils import (parse_qs, wrap_in, merge_dicts, Pipe, pipe, dpass)
 
@@ -54,6 +54,7 @@ def test_smart_schema():
     assert s({'foo': 10}) == {'foo': '10'}
 
     s = schema(schema(foo=int), schema(foo=str), boo=int)
+    assert type(s) == Map
     assert s({'foo': 10, 'boo': '20'}) == {'foo': '10', 'boo': 20}
 
     s = schema(foo=str, _=lambda r: r['foo'].upper())
