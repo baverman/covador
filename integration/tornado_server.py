@@ -2,12 +2,10 @@ import sys; sys.path.insert(0, '.')
 import logging
 logging.basicConfig(level=logging.INFO)
 
-import json
 import tornado.ioloop
 import tornado.web
 import tornado.gen
 
-from covador import schema, item
 from covador.tornado import query_string, json_body, form, params, args
 
 

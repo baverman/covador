@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-import pytest
-
 from covador import schema
-from covador.types import List, Int, Map
+from covador.types import List, Map
 from covador.compat import urlencode, ustr, bstr
-from covador.utils import (parse_qs, wrap_in, merge_dicts, Pipe, pipe, dpass)
+from covador.utils import parse_qs, wrap_in, merge_dicts, Pipe, pipe
 
 
 def test_parse_qs():
