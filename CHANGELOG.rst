@@ -1,3 +1,11 @@
+0.9.21
+======
+
+* [Feature] python 3.7 support
+* [Optimization] `schema(...)` tries to return Map with merged items
+  instead of `MergedMap`.
+
+
 0.9.20
 ======
 
