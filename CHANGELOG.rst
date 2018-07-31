@@ -1,4 +1,20 @@
+0.9.22
+======
+
 * Schema introspection for view functions
+
+  .. code:: python
+
+    import covador
+    from covador.flask import query_string
+
+    @query_string(boo=int)
+    def view():
+        pass
+
+    print(view.schema.items)
+    # {'boo': <covador.types.item object at 0x7fb2c9dad208>}
+
 
 0.9.21
 ======
