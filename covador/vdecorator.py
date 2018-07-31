@@ -54,6 +54,8 @@ class Validator(object):
             else:
                 kwargs.update(data)
                 return func(*args, **kwargs)
+
+        inner.schema = self.schema
         return inner
 
     def __or__(self, other):

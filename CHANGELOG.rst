@@ -1,3 +1,5 @@
+* Schema introspection for view functions
+
 0.9.21
 ======
 

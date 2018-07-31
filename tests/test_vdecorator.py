@@ -48,6 +48,7 @@ def test_make_validator():
         assert foo == 13
 
     boo(10)
+    assert boo.schema
 
 
 def test_make_validator_with_skip():

@@ -27,6 +27,8 @@ class AsyncValidator(Validator):
             else:
                 kwargs.update(data)
                 return (yield from func(*args, **kwargs))
+
+        inner.schema = self.schema
         return inner
 
 
