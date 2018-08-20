@@ -13,6 +13,13 @@ covador
 
 Validation library for processing http endpoint arguments.
 
+
+Usage
+------------------
+
+Flask
+*****************
+
 .. code:: python
 
     from flask import Flask
@@ -31,6 +38,89 @@ Validation library for processing http endpoint arguments.
 
     if __name__ == '__main__':
         app.run()
+
+
+Aiohttp
+*****************
+
+.. code:: python
+
+    import ipaddress
+
+    from aiohttp import web
+
+    from covador import irange, item, length, opt
+    from covador.aiohttp import json_body
+
+
+    def ip_or_net(value):
+        """Custom validation type.
+        Raise ValueError if invalid type
+        """
+        value = value.strip()
+        try:
+            ipaddress.ip_address(value)
+            return value
+        except ValueError:
+            pass
+        ipaddress.ip_network(value)
+        return value
+
+
+    @json_body(
+        # custom validation type, can be usual function that raises ValueError in case of
+        # invalid values
+        ip_address=[ip_or_net],
+        # optional list field with automatically stripped strings with default empty list
+        ids=opt([str.strip], []),
+        # optional string field with default value 'API'
+        source=opt(str, 'API'),
+        # optional boolean field with default False
+        bool_key=opt(bool, False),
+        # optional integer field with allowed values from 0 to 6
+        timeout=opt(irange(0, 6), None),
+    )
+    async def block(request, ip_address, ids, source, sync, timeout):
+        """
+        curl -X POST localhost:8080/api/v1/block \
+        -H 'Content-Type: application/json' -d \
+        '{"ids":["test  "],"ip_address":["101.12.123.123"],"timeout":2}'
+        """
+        return web.Response()
+
+
+    def main():
+        app = web.Application()
+        app.add_routes([web.post('/api/v1/block', block)])
+        web.run_app(app, host='127.0.0.1', port=8080)
+
+
+    if __name__ == '__main__':
+        main()
+
+
+Literal schema
+*****************
+
+.. code:: python
+
+    literal_schema = schema(
+        # non empty required string field with minimum length of 1
+        email=item(str, empty_is_none=False) | length(1, None),
+        # optional enum type, only listed allowed default None
+        platform=nopt(enum('iOS', 'Android'), None),
+        # optional field with non negative integer and default value 0
+        limit=opt(irange(min=0), 0),
+        # optional string field with default empty string
+        username=opt(str, ''),
+    )
+
+    try:
+        validated = literal_schema({})
+    except ValueError:
+        # Error:
+        # [('email', RequiredExcepion('Required item',))]
+        pass
 
 
 * Support for flask, django, aiohttp, tornado and sanic.
