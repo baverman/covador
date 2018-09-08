@@ -1,12 +1,13 @@
-from functools import wraps, partial
+from functools import wraps
 from asyncio import coroutine
 
 from aiohttp.web import HTTPBadRequest
 
 from . import schema, list_schema
-from .types import make_schema, AltMap
+from .types import make_schema
 from .utils import parse_qs
-from .vdecorator import ValidationDecorator, Validator, ErrorHandler, ErrorContext
+from .vdecorator import (ValidationDecorator, Validator, ErrorHandler,
+                         ErrorContext, AltItemGetter)
 from .errors import error_to_json
 
 
@@ -37,14 +38,13 @@ def mergeof(*vdecorators):
 
     getters = [r.getter if isinstance(r.validator, AsyncValidator) else coroutine(r.getter)
                for r in vdecorators]
-    schemas = [r.top_schema.schema for r in vdecorators]
+    item_getters = [r.top_schema.item_getter for r in vdecorators]
 
     @coroutine
     def getter(*args, **kwargs):
         return [(yield from g(*args, **kwargs)) for g in getters]
 
-    top_schema = make_schema(partial(AltMap, schemas))
-
+    top_schema = make_schema(AltItemGetter(item_getters))
     return ValidationDecorator(getter, first.error_handler, top_schema, first.skip_args, AsyncValidator)
 
 

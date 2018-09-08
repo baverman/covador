@@ -2,17 +2,19 @@
 import re
 from datetime import datetime
 
-from .utils import Pipeable, clone, ensure_context, merge_dicts
+from .utils import clone, ensure_context, merge_dicts
 from .compat import utype, btype, stype, ustr, str_map, str_coerce, bstr, PY2
 from .errors import (Invalid, RequiredExcepion, RangeException, RegexException,
                      LengthException, EnumException)
 
 __all__ = ['Map', 'List', 'Tuple', 'Int', 'Str', 'Bool', 'split', 'Range',
            'irange', 'frange', 'length', 'enum', 'ListMap', 'Bytes', 'regex',
-           'email', 'url', 'uuid', 'item', 'nitem', 'opt', 'nopt', 'Invalid', 'RequiredExcepion',
-           'RangeException', 'RegexException', 'LengthException', 'EnumException',
-           'oneof', 'make_schema', 'DateTime', 'Date', 'Time', 'Timestamp',
-           'timestamp', 'timestamp_msec', 'numbers', 'KeyVal', 'check']
+           'email', 'url', 'uuid', 'item', 'nitem', 'opt', 'nopt', 'Invalid',
+           'RequiredExcepion', 'RangeException', 'RegexException',
+           'LengthException', 'EnumException', 'oneof', 'make_schema',
+           'DateTime', 'Date', 'Time', 'Timestamp', 'timestamp', 'timestamp_msec',
+           'numbers', 'KeyVal', 'check', 'item_getter', 'list_item_getter',
+           'soft_map', 'typed_map']
 
 UNDEFINED = object()
 EMPTY_VALUES = b'', u''
@@ -20,7 +22,7 @@ EMPTY_VALUES = b'', u''
 
 class item(object):
     def __init__(self, typ=None, default=None, source_key=None, src=None, dest=None,
-                 required=True, multi=False, empty_is_none=True,  **kwargs):
+                 required=True, multi=False, empty_is_none=True, **kwargs):
         self.src = source_key or src
         self.dest = dest
         self.required = required
@@ -85,7 +87,99 @@ def get_item(it):
     return it
 
 
-class Map(Pipeable):
+def get_map(it):
+    if isinstance(it, dict):
+        it = Map(it)
+    return it
+
+
+class ItemGetter(object):
+    def get(self, data, item):
+        '''Get corresponding data for item
+
+        :param data: source data
+        :param item: item to get
+
+        Subsclasses can override this method to implement map access to more complex
+        structures then plain dict
+        '''
+        return data.get(item.src)
+
+    def to_dict(self, data, multi=False):
+        return data
+
+
+class ListItemGetter(ItemGetter):
+    '''Get items from dict with lists as values
+
+    Can be used as root getter for result of pasrsing query string.
+    '''
+    def get(self, data, field):
+        if field.multi:
+            return data.get(field.src)
+        else:
+            d = data.get(field.src)
+            if d:
+                return d[0]
+            else:
+                return None
+
+    def to_dict(self, data, multi=False):
+        if multi:
+            return data
+        else:
+            return dict((k, v[0]) if v else None
+                        for k, v in data.items())
+
+
+item_getter = ItemGetter()
+list_item_getter = ListItemGetter()
+
+
+class Adjustable(object):
+    def adjust(self):  # pragma: no cover
+        pass
+
+
+class Pipeable(object):
+    """Pipeable mixin
+
+    Adds ``|`` operation to class.
+    """
+    def __or__(self, other):
+        return Pipe([self, ensure_context(self, other)], self)
+
+    def __ror__(self, other):
+        return Pipe([ensure_context(self, other, False), self], self)
+
+
+class Pipe(Pipeable, Adjustable):
+    """Pipe validator
+
+    Pass data through function list
+    """
+    def __init__(self, pipe, ctx=None):
+        self.pipe = pipe
+        self.ctx = None
+
+    def __call__(self, data):
+        for it in self.pipe:
+            data = it(data)
+        return data
+
+    def __or__(self, other):
+        return Pipe(self.pipe + [ensure_context(self.ctx, other)], self.ctx)
+
+    def __ror__(self, other):
+        return Pipe([ensure_context(self.ctx, other, False)] + self.pipe, self.ctx)
+
+    def adjust(self, item_getter):
+        if self.pipe:
+            self.pipe[0] = adjust_getter(self.pipe[0], item_getter)
+        return self
+
+
+class Map(Pipeable, Adjustable):
     '''Dict checker
 
     :param items: Dict with fields. Key is a destination key,
@@ -105,8 +199,8 @@ class Map(Pipeable):
                  'data': item('str', dest='decoded')})
         m({'data': b'data'}) -> {'raw': b'data', 'decoded': u'data'}
     '''
-    def __init__(self, items):
-        if isinstance(items, Map):
+    def __init__(self, items, getter=None):
+        if isinstance(items, Map):  # pragma: no cover
             items = items.items
 
         self.items = {}
@@ -118,21 +212,12 @@ class Map(Pipeable):
                 it.dest = k
             self.items[it.dest] = it
 
-    def get(self, data, item):
-        '''Get corresponding data for item
-
-        :param data: source data
-        :param item: item to get
-
-        Subsclasses can override this method to implement map access to more complex
-        structures then plain dict
-        '''
-        return data.get(item.src)
+        self.getter = getter or item_getter
 
     def __call__(self, data):
         errors = []
         result = {}
-        get = self.get
+        get = self.getter.get
 
         for k, it in self.items.items():
             raw_data = get(data, it)
@@ -145,6 +230,37 @@ class Map(Pipeable):
             raise Invalid(errors, result)
 
         return result
+
+    def adjust(self, item_getter):
+        if item_getter is not self.getter:
+            return clone(self, getter=item_getter)
+        return self
+
+
+class SoftMap(Map):
+    def __call__(self, data):
+        result = self.getter.to_dict(data)
+        if self.items:
+            valid = Map.__call__(self, data)
+            result.update(valid)
+        return result
+
+
+class SoftListMap(SoftMap):
+    def __call__(self, data):
+        result = self.getter.to_dict(data, True)
+        if self.items:
+            valid = Map.__call__(self, data)
+            result.update(valid)
+        return result
+
+
+def soft_map(**kwargs):
+    return SoftMap(kwargs)
+
+
+def typed_map(key=None, value=None):
+    return SoftMap({}) | KeyVal(key, value)
 
 
 class List(Pipeable):
@@ -216,19 +332,8 @@ class Tuple(Pipeable):
 
 
 class ListMap(Map):
-    '''Checker for dicts with list values
-
-    Can be used as root schema for result of pasrsing query string.
-    '''
-    def get(self, data, field):
-        if field.multi:
-            return data.get(field.src)
-        else:
-            d = data.get(field.src)
-            if d:
-                return d[0]
-            else:
-                return None
+    def __init__(self, items, getter=None):
+        Map.__init__(self, items, getter or list_item_getter)
 
 
 class KeyVal(Pipeable):
@@ -526,13 +631,14 @@ def wrap_type(typ):
     return ALIASES.get(typ, typ)
 
 
-class oneof(Pipeable):
+class oneof(Pipeable, Adjustable):
     def __init__(self, *alternatives):
-        self.alternatives = alternatives
+        self.alternatives = [get_map(it) for it in alternatives]
         self.blank = None
 
-    def _adjust(self, typ):
-        self.alternatives = [typ(a) for a in self.alternatives]
+    def adjust(self, item_getter):
+        self.alternatives = [adjust_getter(it, item_getter)
+                             for it in self.alternatives]
         blank = {}
         for a in self.alternatives:
             blank.update((k, None) for k in a.items)
@@ -567,41 +673,56 @@ class MergedMap(Pipeable):
         return result
 
 
-class AltMap(Map):
-    def __init__(self, alt_maps, items):
-        Map.__init__(self, items)
-        self.alt_maps = [vars(m)['get'] for m in alt_maps]
-
-    def get(self, data, item):
-        for d, m in zip(data, self.alt_maps):
-            if item.src in d:
-                return m(self, d, item)
+def pipe(p1, p2):
+    """Joins two pipes"""
+    if isinstance(p1, Pipeable) or isinstance(p2, Pipeable):
+        return p1 | p2
+    return Pipe([p1, p2])
 
 
-def make_schema(top_schema):
+def adjust_getter(schema, item_getter):
+    if isinstance(schema, Adjustable):
+        schema = schema.adjust(item_getter)
+    return schema
+
+
+def guess_map(maps):
+    types = set(type(it) for it in maps)
+    if any(not issubclass(it, Map) for it in types):
+        return None
+
+    types.discard(Map)
+    if not types:
+        return Map
+
+    if len(types) == 1:
+        return list(types)[0]
+
+
+def make_schema(item_getter):
     def schema(*args, **kwargs):
-        args = [r._adjust(top_schema) if isinstance(r, oneof) else top_schema(r)
-                for r in args]
+        args = [get_map(it) for it in args]
+        args = [adjust_getter(it, item_getter) for it in args]
 
         tail = kwargs.pop('_', None)
         if args:
             if len(args) == 1 and not kwargs:
                 s = args[0]
             else:
-                if (issubclass(top_schema, Map)
-                        and all(isinstance(r, top_schema) for r in args)):
+                mtype = guess_map(args)
+                if mtype:
                     arg_items = [r.items for r in args]
                     merged_items = merge_dicts(*arg_items, **kwargs)
-                    s = top_schema(merged_items)
+                    s = mtype(merged_items, item_getter)
                 else:
-                    s = MergedMap(args + [top_schema(kwargs)])
+                    s = MergedMap(args + [Map(kwargs, item_getter)])
         else:
-            s = top_schema(kwargs)
+            s = Map(kwargs, item_getter)
 
         if tail:
             return s | tail
 
         return s
 
-    schema.schema = top_schema
+    schema.item_getter = item_getter
     return schema

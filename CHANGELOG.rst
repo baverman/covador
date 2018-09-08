@@ -1,3 +1,12 @@
+dev
+===
+
+* [Refactor] extract item getter entity from `Map`.
+* [Feature] soft map type. It can describe dicts with
+  unknown keys.
+* [Fix] One can pass pipes with maps into schema.
+
+
 0.9.22
 ======
 

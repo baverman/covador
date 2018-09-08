@@ -3,5 +3,6 @@ from .vdecorator import ValidationDecorator
 from .types import *
 
 version = '0.9.22'
-schema = make_schema(Map)
-list_schema = make_schema(ListMap)
+
+schema = make_schema(item_getter)
+list_schema = make_schema(list_item_getter)

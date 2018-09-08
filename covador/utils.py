@@ -68,46 +68,6 @@ def ensure_context(ctx, func, right=True):
     return func
 
 
-class Pipeable(object):
-    """Pipeable mixin
-
-    Adds ``|`` operation to class.
-    """
-    def __or__(self, other):
-        return Pipe([self, ensure_context(self, other)], self)
-
-    def __ror__(self, other):
-        return Pipe([ensure_context(self, other, False), self], self)
-
-
-class Pipe(Pipeable):
-    """Pipe validator
-
-    Pass data through function list
-    """
-    def __init__(self, pipe, ctx=None):
-        self.pipe = pipe
-        self.ctx = None
-
-    def __call__(self, data):
-        for it in self.pipe:
-            data = it(data)
-        return data
-
-    def __or__(self, other):
-        return Pipe(self.pipe + [ensure_context(self.ctx, other)], self.ctx)
-
-    def __ror__(self, other):
-        return Pipe([ensure_context(self.ctx, other, False)] + self.pipe, self.ctx)
-
-
-def pipe(p1, p2):
-    """Joins two pipes"""
-    if isinstance(p1, Pipeable) or isinstance(p2, Pipeable):
-        return p1 | p2
-    return Pipe([p1, p2])
-
-
 def dpass(value):
     """Allows complex inline expressions in decorator
 

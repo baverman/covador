@@ -1,11 +1,11 @@
 import os
 import sys
 import logging
-from functools import wraps, partial
+from functools import wraps
 
 from .compat import reraise
-from .utils import clone, pipe
-from .types import make_schema, AltMap
+from .utils import clone
+from .types import make_schema, pipe
 
 DEBUG = os.environ.get('COVADOR_DEBUG')
 log = logging.getLogger('covador.bad-request')
@@ -30,6 +30,23 @@ class ErrorContext(object):
     @property
     def exception(self):
         return self.exc_info[1]
+
+
+class AltItemGetter(object):
+    def __init__(self, item_getters):
+        self.item_getters = [it.get for it in item_getters]
+        self.item_to_dict = [it.to_dict for it in item_getters]
+
+    def get(self, data, item):
+        for d, fn in zip(data, self.item_getters):
+            if item.src in d:
+                return fn(d, item)
+
+    def to_dict(self, data, multi=False):
+        result = {}
+        for d, fn in zip(data, self.item_to_dict):
+            result.update(fn(d, multi))
+        return result
 
 
 class Validator(object):
@@ -82,13 +99,12 @@ def mergeof(*vdecorators):
     first = vdecorators[0]
 
     getters = [r.getter for r in vdecorators]
-    schemas = [r.top_schema.schema for r in vdecorators]
+    item_getters = [r.top_schema.item_getter for r in vdecorators]
 
     def getter(*args, **kwargs):
         return [g(*args, **kwargs) for g in getters]
 
-    top_schema = make_schema(partial(AltMap, schemas))
-
+    top_schema = make_schema(AltItemGetter(item_getters))
     return ValidationDecorator(getter, first.error_handler, top_schema, first.skip_args)
 
 

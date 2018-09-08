@@ -369,3 +369,8 @@ def test_check():
     with pytest.raises(ValueError) as ei:
         check(str.isdigit, 'Must be a digit')('a')
     assert str(ei.value) == 'Must be a digit'
+
+
+def test_soft_schema():
+    s = schema(soft_map(), boo=int)
+    assert s({'boo': 10, 'foo': 'bar'}) == {'boo': 10, 'foo': 'bar'}

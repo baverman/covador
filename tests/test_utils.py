@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from covador import schema
-from covador.types import List, Map
+from covador.types import List, Map, Pipe, pipe
 from covador.compat import urlencode, ustr, bstr
-from covador.utils import parse_qs, wrap_in, merge_dicts, Pipe, pipe
+from covador.utils import parse_qs, wrap_in, merge_dicts
 
 
 def test_parse_qs():
