@@ -1,5 +1,5 @@
-dev
-===
+0.9.23
+======
 
 * [Refactor] extract item getter entity from `Map`.
 * [Feature] soft map type. It can describe dicts with
