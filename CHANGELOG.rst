@@ -1,3 +1,10 @@
+dev
+===
+
+* [Fix] length(min=N) was treated as length(N) -- sequence must
+  have length of N exactly. This is confusing and wrong behavior.
+
+
 0.9.23
 ======
 

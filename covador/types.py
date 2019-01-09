@@ -35,8 +35,8 @@ class item(object):
             self.typ = List(self.typ)
         self.pipe = []
 
-    def clone(self):
-        return clone(self, pipe=self.pipe[:])
+    def clone(self, **kwargs):
+        return clone(self, pipe=self.pipe[:], **kwargs)
 
     def __or__(self, other):
         obj = self.clone()
@@ -495,13 +495,30 @@ class enum(Pipeable):
 
 
 class length(Pipeable):
-    def __init__(self, min=None, max=UNDEFINED):
-        self.min = min
-        self.max = min if max is UNDEFINED else max
-        assert self.min is not None or self.max is not None
+    '''Validates sequence length
+
+    length(N) seq length is exact N
+    length(min=N) seq length must be at least N
+    length(max=N) seq length is limited by N
+    length(N, M) or length(min=N, max=M) sequence length must be between N and M
+    '''
+    def __init__(self, exact=None, min=None, max=None):
+        if exact is not None and min is not None:
+            self.exact = None
+            self.min = exact
+            self.max = min
+        else:
+            self.exact = exact
+            self.min = min
+            self.max = max
+        assert (self.min is not None
+                or self.max is not None
+                or self.exact is not None)
 
     def __call__(self, data):
         size = len(data)
+        if self.exact is not None and size != self.exact:
+            raise LengthException(data, exact=self.exact)
         if self.min is not None and size < self.min:
             raise LengthException(data, min=self.min)
         if self.max is not None and size > self.max:

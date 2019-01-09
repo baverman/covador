@@ -179,6 +179,11 @@ def test_length():
     assert l([1]) == [1]
     assert l((1, 2, 3)) == (1, 2, 3)
 
+    l = length(min=1, max=3)
+    assert l('12') == '12'
+    assert l([1]) == [1]
+    assert l((1, 2, 3)) == (1, 2, 3)
+
     with pytest.raises(LengthException) as ei:
         assert l('')
     assert str(ei.value) == 'Length of 0 is less then 1'
@@ -192,11 +197,11 @@ def test_length():
 
     with pytest.raises(LengthException) as ei:
         assert l('2')
-    assert str(ei.value) == 'Length of 1 is less then 4'
+    assert str(ei.value) == 'Length of 1 does not equal 4'
 
     with pytest.raises(LengthException) as ei:
         assert l('24567')
-    assert str(ei.value) == 'Length of 5 is greater then 4'
+    assert str(ei.value) == 'Length of 5 does not equal 4'
 
 
 def test_multi_map():

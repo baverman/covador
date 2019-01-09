@@ -21,13 +21,16 @@ class EnumException(ValueError):
 
 
 class LengthException(ValueError):
-    def __init__(self, value, min=None, max=None):
+    def __init__(self, value, exact=None, min=None, max=None):
         self.value = value
+        self.exact = exact
         self.min = min
         self.max = max
 
         size = len(value or '')
-        if min is not None:
+        if exact is not None:
+            ValueError.__init__(self, 'Length of {0} does not equal {1}'.format(size, exact))
+        elif min is not None:
             ValueError.__init__(self, 'Length of {0} is less then {1}'.format(size, min))
         else:
             ValueError.__init__(self, 'Length of {0} is greater then {1}'.format(size, max))
