@@ -1,5 +1,5 @@
-dev
-===
+0.9.24
+======
 
 * [Fix] length(min=N) was treated as length(N) -- sequence must
   have length of N exactly. This is confusing and wrong behavior.
