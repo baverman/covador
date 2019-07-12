@@ -1,5 +1,5 @@
 from functools import wraps
-from asyncio import coroutine
+from asyncio import coroutine, iscoroutine
 
 from aiohttp.web import HTTPBadRequest
 
@@ -18,7 +18,9 @@ class AsyncValidator(Validator):
         def inner(*args, **kwargs):
             sargs = args[self.skip_args:]
             try:
-                data = (yield from self.getter(*sargs, **kwargs))
+                data = self.getter(*sargs, **kwargs)
+                if iscoroutine(data):
+                    data = (yield from data)
                 data = self.schema(data)
             except Exception:
                 if self.error_handler:
@@ -35,17 +37,21 @@ class AsyncValidator(Validator):
 
 def mergeof(*vdecorators):
     first = vdecorators[0]
-
-    getters = [r.getter if isinstance(r.validator, AsyncValidator) else coroutine(r.getter)
-               for r in vdecorators]
     item_getters = [r.top_schema.item_getter for r in vdecorators]
 
     @coroutine
     def getter(*args, **kwargs):
-        return [(yield from g(*args, **kwargs)) for g in getters]
+        result = []
+        for v in vdecorators:
+            data = v.getter(*args, **kwargs)
+            if iscoroutine(data):
+                data = (yield from data)
+            result.append(data)
+        return result
 
     top_schema = make_schema(AltItemGetter(item_getters))
-    return ValidationDecorator(getter, first.error_handler, top_schema, first.skip_args, AsyncValidator)
+    return ValidationDecorator(getter, first.error_handler, top_schema,
+                               first.skip_args, AsyncValidator)
 
 
 def error_adapter(func):
@@ -108,8 +114,8 @@ _form = lambda request, *_args, **_kwargs: get_form(get_request(request))
 _args = lambda request, *_args, **_kwargs: get_request(request).match_info
 _json_body = lambda request, *_args, **_kwargs: get_json(get_request(request))
 
-query_string = ValidationDecorator(_query_string, error_handler, list_schema)
+query_string = ValidationDecorator(_query_string, error_handler, list_schema, validator=AsyncValidator)
 form = ValidationDecorator(_form, error_handler, list_schema, validator=AsyncValidator)
 params = mergeof(query_string, form)
-args = ValidationDecorator(_args, error_handler, schema)
+args = ValidationDecorator(_args, error_handler, schema, validator=AsyncValidator)
 json_body = ValidationDecorator(_json_body, error_handler, schema, validator=AsyncValidator)
