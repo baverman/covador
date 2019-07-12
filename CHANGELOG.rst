@@ -1,3 +1,9 @@
+0.9.25
+======
+
+* [Feature] web frameworks in integration tests were updated.
+* [Fix] aiohttp query_string decorator led to deprecation error.
+
 0.9.24
 ======
 
