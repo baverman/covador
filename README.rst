@@ -33,7 +33,8 @@ Validation library for processing http endpoint arguments.
         app.run()
 
 
-* Support for flask, django, aiohttp, tornado and sanic.
+* Support for flask(0.x, 1.0.x, 1.1.x), django(1.x, 2.x), aiohttp(2.x, 3.x),
+  tornado(3.x, 4.x, 5.x, 6.x) and sanic(0.x, 18.x, 19.x).
 * Simple creating of custom ``query_string``/``form``/``params``/``json_body``/``args`` wrappers.
 * Multi dict support via item ``multi`` param.
 * Multi dict keys support via item ``src`` param.
