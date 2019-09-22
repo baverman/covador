@@ -1,8 +1,15 @@
+0.9.26dev
+=========
+
+* [Fix] Right hand pipe must coerce value to item
+
+
 0.9.25
 ======
 
 * [Feature] web frameworks in integration tests were updated.
 * [Fix] aiohttp query_string decorator led to deprecation error.
+
 
 0.9.24
 ======

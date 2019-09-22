@@ -69,6 +69,8 @@ def test_item_pipe():
 
     assert (int | item())('10') == 10
 
+    assert (str | item())(b'10') == u'10'
+
 
 def test_item_empty():
     with pytest.raises(RequiredExcepion):

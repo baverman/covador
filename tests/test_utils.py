@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from covador import schema
-from covador.types import List, Map, Pipe, pipe
-from covador.compat import urlencode, ustr, bstr
+from covador.types import List, Map, Pipe, pipe, item
+from covador.compat import urlencode, ustr, bstr, utype
 from covador.utils import parse_qs, wrap_in, merge_dicts
 
 
@@ -35,9 +35,14 @@ def test_merge_dicts():
 
 def test_pipe():
     assert (Pipe([str, str.strip]) | str.lower)(' AA ') == 'aa'
-    assert (str | Pipe([str.strip, str.lower]))(' AA ') == 'aa'
+    assert (str | Pipe([utype.strip, utype.lower]))(' AA ') == u'aa'
     assert pipe(Pipe([str, int]), float).pipe == [str, int, float]
-    assert pipe(float, Pipe([str, int])).pipe == [float, str, int]
+
+    p = pipe(float, Pipe([str, int]))
+    assert type(p) is item
+    assert p.typ is float
+    assert p.pipe == [str, int]
+
     assert pipe(str, int).pipe == [str, int]
 
 

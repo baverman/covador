@@ -40,13 +40,15 @@ class item(object):
 
     def __or__(self, other):
         obj = self.clone()
-        obj.pipe.append(ensure_context(self.typ, other))
+        fn = ensure_context(self.typ, other)
+        if type(fn) is Pipe:
+            obj.pipe.extend(fn.pipe)
+        else:
+            obj.pipe.append(fn)
         return obj
 
     def __ror__(self, other):
-        obj = self.clone()
-        obj.pipe.insert(0, ensure_context(self.typ, other, False))
-        return obj
+        return get_item(other) | self
 
     def __call__(self, data):
         if self.empty_is_none and data in EMPTY_VALUES:
@@ -150,7 +152,7 @@ class Pipeable(object):
         return Pipe([self, ensure_context(self, other)], self)
 
     def __ror__(self, other):
-        return Pipe([ensure_context(self, other, False), self], self)
+        return get_item(other) | self
 
 
 class Pipe(Pipeable, Adjustable):
@@ -169,9 +171,6 @@ class Pipe(Pipeable, Adjustable):
 
     def __or__(self, other):
         return Pipe(self.pipe + [ensure_context(self.ctx, other)], self.ctx)
-
-    def __ror__(self, other):
-        return Pipe([ensure_context(self.ctx, other, False)] + self.pipe, self.ctx)
 
     def adjust(self, item_getter):
         if self.pipe:
