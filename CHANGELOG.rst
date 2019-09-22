@@ -1,5 +1,5 @@
-0.9.26dev
-=========
+0.9.26
+======
 
 * [Fix] Right hand pipe must coerce value to item
 
