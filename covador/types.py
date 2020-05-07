@@ -391,7 +391,7 @@ class Int(Pipeable):
     def __call__(self, data):
         if type(data) is utype or type(data) is btype:
             if PY2:
-                data = bstr(data, 'utf-8')  # pragma: no cover py3
+                data = bstr(data, 'utf-8')  # pragma: no py3 cover
             return int(data, self.base)
         return int(data)
 

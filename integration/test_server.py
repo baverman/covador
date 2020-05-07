@@ -36,7 +36,7 @@ def server(covfile, module_name, append_coverage=False):
 
     for _ in range(50):
         try:
-            resp = requests.get('http://127.0.0.1:5000/status/')
+            resp = requests.get('http://127.0.0.1:5000/status/', timeout=2)
             resp.content
         except:
             time.sleep(0.1)
@@ -66,15 +66,15 @@ def server(covfile, module_name, append_coverage=False):
 
 def do_tests():
     # qs
-    resp = requests.get('http://127.0.0.1:5000/qs/?boo=boo')
+    resp = requests.get('http://127.0.0.1:5000/qs/?boo=boo', timeout=2)
     assert resp.content == b'boo'
 
     # form
-    resp = requests.post('http://127.0.0.1:5000/form/',
+    resp = requests.post('http://127.0.0.1:5000/form/', timeout=2,
                          data={'p1': bstr(u'буу', 'utf-8'), 'p2': 10})
     assert resp.content == bstr(u'буу.10', 'utf-8')
 
-    resp = requests.post('http://127.0.0.1:5000/form/',
+    resp = requests.post('http://127.0.0.1:5000/form/', timeout=2,
                          data='p1=boo&p2=10')
     assert resp.status_code == 400
     assert resp.json() == {'details': {'p1': 'Required item',
@@ -82,32 +82,33 @@ def do_tests():
                            'error': 'bad-request'}
 
     # mform
-    resp = requests.post('http://127.0.0.1:5000/form/',
+    resp = requests.post('http://127.0.0.1:5000/form/', timeout=2,
                          data=helpers.mform,
                          headers={'Content-Type': helpers.mct})
     assert resp.content == bstr(u'буу.10', 'utf-8')
 
     # params
-    resp = requests.post('http://127.0.0.1:5000/params/',
+    resp = requests.post('http://127.0.0.1:5000/params/', timeout=2,
                          params={'p2': 10}, data={'p1': 'boo'})
     assert resp.content == b'boo.10'
 
     # args
-    resp = requests.get('http://127.0.0.1:5000/args/boo/')
+    resp = requests.get('http://127.0.0.1:5000/args/boo/', timeout=2)
     assert resp.content == b'boo'
 
     # error
-    resp = requests.get('http://127.0.0.1:5000/qs/')
+    resp = requests.get('http://127.0.0.1:5000/qs/', timeout=2)
     assert resp.status_code == 400
     assert resp.json() == {'details': {'boo': 'Required item'},
                            'error': 'bad-request'}
 
     # json body
     data = {'boo': 'утф'}
-    resp = requests.post('http://127.0.0.1:5000/json/', json=data)
+    resp = requests.post('http://127.0.0.1:5000/json/', timeout=2, json=data)
     assert resp.content == bstr(u'утф', 'utf-8')
 
-    resp = requests.post('http://127.0.0.1:5000/json/', data=json.dumps(data))
+    resp = requests.post('http://127.0.0.1:5000/json/', timeout=2,
+                         data=json.dumps(data))
     assert resp.status_code == 400
     assert resp.json() == {'details': {'boo': 'Required item'},
                            'error': 'bad-request'}
@@ -148,5 +149,6 @@ def test_sanic():
     with server('sanic.cov', 'integration.sanic_server'):
         do_tests()
 
-        resp = requests.get('http://127.0.0.1:5000/qs-multi/?boo=boo&boo=foo')
+        resp = requests.get('http://127.0.0.1:5000/qs-multi/?boo=boo&boo=foo',
+                            timeout=2)
         assert resp.content == b'boo,foo'

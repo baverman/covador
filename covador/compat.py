@@ -32,13 +32,13 @@ def str_coerce(stype, data, encoding='latin1'):
     return bstr(data, encoding)
 
 
-if PY2:  # pragma: no cover
+if PY2:  # pragma: no py3 cover
     import __builtin__ as builtins
     import urlparse
     from urllib import urlencode
 
     exec('def reraise(tp, value, tb=None):\n raise tp, value, tb')
-else:  # pragma: no cover
+else:  # pragma: no py2 cover
     import builtins
     from urllib import parse as urlparse
     from urllib.parse import urlencode

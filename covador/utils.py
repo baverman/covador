@@ -30,7 +30,7 @@ def parse_qs(qs):
 
         name = nv[0].replace(b'+', b' ')
         name = uq(name)
-        if not PY2:  # pragma: no cover py2
+        if not PY2:  # pragma: no py2 cover
             name = ustr(name, 'latin1')
         value = nv[1].replace(b'+', b' ')
         value = uq(value)
