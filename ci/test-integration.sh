@@ -22,26 +22,26 @@ cover_sanic=sanic
 flask26="flask==0.12.4 flask==1.0.2"
 flask27="flask==0.12.4 flask==1.1.1"
 flask34="flask==0.12.4 flask==1.0.2"
-flask35="flask==0.12.4 flask==1.1.1"
-flask36="flask==0.12.4 flask==1.1.1"
-flask37="flask==0.12.4 flask==1.1.1"
-flask38="flask==0.12.4 flask==1.1.1"
+flask35="flask==0.12.4 flask==1.1.2"
+flask36="flask==0.12.4 flask==1.1.2"
+flask37="flask==0.12.4 flask==1.1.2"
+flask38="flask==0.12.4 flask==1.1.2"
 
 django26="django==1.4.22"
 django27="django==1.4.22 django==1.9.13 django==1.11.13"
 django34="django==1.9.13 django==1.11.13 django==2.0.13"
-django35="django==1.9.13 django==1.11.13 django==2.2.3"
-django36="django==1.9.13 django==1.11.13 django==2.2.3"
-django37="django==1.9.13 django==1.11.13 django==2.2.3"
-django38="django==1.9.13 django==1.11.13 django==2.2.3"
+django35="django==1.9.13 django==1.11.13 django==2.2.12"
+django36="django==1.9.13 django==1.11.13 django==2.2.12"
+django37="django==1.9.13 django==1.11.13 django==2.2.12"
+django38="django==1.9.13 django==1.11.13 django==2.2.12"
 
 tornado26="tornado==3.2.2 tornado==4.3"
 tornado27="tornado==3.2.2 tornado==4.5.3 tornado==5.1.1"
 tornado34="tornado==3.2.2 tornado==4.5.3 tornado==5.1.1"
-tornado35="tornado==3.2.2 tornado==4.5.3 tornado==5.1.1 tornado==6.0.3"
-tornado36="tornado==3.2.2 tornado==4.5.3 tornado==5.1.1 tornado==6.0.3"
-tornado37="tornado==3.2.2 tornado==4.5.3 tornado==5.1.1 tornado==6.0.3"
-tornado38="tornado==3.2.2 tornado==4.5.3 tornado==5.1.1 tornado==6.0.3"
+tornado35="tornado==3.2.2 tornado==4.5.3 tornado==5.1.1 tornado==6.0.4"
+tornado36="tornado==3.2.2 tornado==4.5.3 tornado==5.1.1 tornado==6.0.4"
+tornado37="tornado==3.2.2 tornado==4.5.3 tornado==5.1.1 tornado==6.0.4"
+tornado38="tornado==3.2.2 tornado==4.5.3 tornado==5.1.1 tornado==6.0.4"
 
 aiohttp_yield34="aiohttp==2.1.0"
 aiohttp_async35="aiohttp==2.3.10 aiohttp==3.6.2"
@@ -63,10 +63,10 @@ for frm in ${!frameworks_key}; do
         echo
         echo "### Testing $pkg"
         pypath=/tmp/covador-$pyver-$pkg
-        if [ ! -e $pypath.done ]; then
+        if [ ! -e $pypath/.done ]; then
+            # force attrs version to fix pytest error
             pip --disable-pip-version-check --exists-action=i install $PIP_OPTS --target=$pypath $pkg attrs==18.2.0 | cat
-            # pip --disable-pip-version-check install $PIP_OPTS --target=$pypath -I attrs==18.2.0 | cat
-            touch $pypath.done
+            touch $pypath/.done
         fi
         PYTHONPATH=$PYTHONPATH:$pypath python -m pytest integration -k test_$frm
         COVERAGE_FILE=$frm.cov coverage report -m --fail-under=100 --include covador/${!cover_key}.py
