@@ -14,5 +14,4 @@ cache: pip
 install:
     - pip install attrs==18.2.0 pytest-cov requests
 script:
-    - ./ci/test.sh
-    - ./ci/test-integration.sh
+    - ./ci/test.sh && ./ci/test-integration.sh

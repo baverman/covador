@@ -1,38 +1,13 @@
 from functools import wraps
-from asyncio import coroutine, iscoroutine
+from asyncio import coroutine, iscoroutine, coroutines
 
 from aiohttp.web import HTTPBadRequest
 
 from . import schema, list_schema
 from .types import make_schema
 from .utils import parse_qs
-from .vdecorator import (ValidationDecorator, Validator, ErrorHandler,
-                         ErrorContext, AltItemGetter)
+from .vdecorator import ValidationDecorator, ErrorHandler, AltItemGetter
 from .errors import error_to_json
-
-
-class AsyncValidator(Validator):
-    def __call__(self, func):
-        @wraps(func)
-        @coroutine
-        def inner(*args, **kwargs):
-            sargs = args[self.skip_args:]
-            try:
-                data = self.getter(*sargs, **kwargs)
-                if iscoroutine(data):
-                    data = (yield from data)
-                data = self.schema(data)
-            except Exception:
-                if self.error_handler:
-                    return self.error_handler(ErrorContext(sargs, kwargs))
-                else:  # pragma: no cover
-                    raise
-            else:
-                kwargs.update(data)
-                return (yield from func(*args, **kwargs))
-
-        inner.schema = self.schema
-        return inner
 
 
 def mergeof(*vdecorators):
@@ -51,7 +26,7 @@ def mergeof(*vdecorators):
 
     top_schema = make_schema(AltItemGetter(item_getters))
     return ValidationDecorator(getter, first.error_handler, top_schema,
-                               first.skip_args, AsyncValidator)
+                               first.skip_args)
 
 
 def error_adapter(func):
@@ -109,13 +84,18 @@ def get_json(request):
     return {}
 
 
-_query_string = lambda request, *_args, **_kwargs: get_qs(get_request(request))
-_form = lambda request, *_args, **_kwargs: get_form(get_request(request))
-_args = lambda request, *_args, **_kwargs: get_request(request).match_info
-_json_body = lambda request, *_args, **_kwargs: get_json(get_request(request))
+def mark_coro(fn):
+    fn._is_coroutine = getattr(coroutines, '_is_coroutine', True)
+    return fn
 
-query_string = ValidationDecorator(_query_string, error_handler, list_schema, validator=AsyncValidator)
-form = ValidationDecorator(_form, error_handler, list_schema, validator=AsyncValidator)
+
+_query_string = lambda request, *_args, **_kwargs: get_qs(get_request(request))
+_form = mark_coro(lambda request, *_args, **_kwargs: get_form(get_request(request)))
+_args = lambda request, *_args, **_kwargs: get_request(request).match_info
+_json_body = mark_coro(lambda request, *_args, **_kwargs: get_json(get_request(request)))
+
+query_string = ValidationDecorator(_query_string, error_handler, list_schema)
+form = ValidationDecorator(_form, error_handler, list_schema)
 params = mergeof(query_string, form)
-args = ValidationDecorator(_args, error_handler, schema, validator=AsyncValidator)
-json_body = ValidationDecorator(_json_body, error_handler, schema, validator=AsyncValidator)
+args = ValidationDecorator(_args, error_handler, schema)
+json_body = ValidationDecorator(_json_body, error_handler, schema)

@@ -68,7 +68,7 @@ for frm in ${!frameworks_key}; do
             pip --disable-pip-version-check --exists-action=i install $PIP_OPTS --target=$pypath $pkg attrs==18.2.0 | cat
             touch $pypath/.done
         fi
-        PYTHONPATH=$PYTHONPATH:$pypath python -m pytest integration -k test_$frm
+        COVADOR_DEBUG=1 PYTHONPATH=$PYTHONPATH:$pypath python -m pytest integration -k test_$frm
         COVERAGE_FILE=$frm.cov coverage report -m --fail-under=100 --include covador/${!cover_key}.py
     done
 done

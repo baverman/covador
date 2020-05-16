@@ -1,6 +1,6 @@
 import pytest
 
-from covador import list_schema, schema, dpass, soft_map, typed_map
+from covador import list_schema, schema, dpass, soft_map, typed_map, compat
 from covador.types import Int, SoftListMap
 from covador.utils import wrap_in
 from covador.vdecorator import (ErrorHandler, ErrorContext,
@@ -200,3 +200,9 @@ def test_typed_map():
         return data
 
     assert boo({'arg': '10', 'foo': 20}) == {'arg': 10, 'foo': 20}
+
+
+if compat.ASYNC_AWAIT:
+    from tests._test_async_vdecorator import *
+elif compat.COROUTINE:
+    from tests._test_coro_vdecorator import *

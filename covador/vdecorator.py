@@ -3,11 +3,13 @@ import sys
 import logging
 from functools import wraps
 
-from .compat import reraise
+from .compat import reraise, iscoroutinefunction
 from .utils import clone
 from .types import make_schema, pipe
+from .ast_transformer import transform
 
 DEBUG = os.environ.get('COVADOR_DEBUG')
+GEN_CACHE = {}
 log = logging.getLogger('covador.bad-request')
 
 
@@ -57,23 +59,21 @@ class Validator(object):
         self.skip_args = skip_args
 
     def __call__(self, func):
-        @wraps(func)
-        def inner(*args, **kwargs):
-            sargs = args[self.skip_args:]
-            try:
-                data = self.getter(*sargs, **kwargs)
-                data = self.schema(data)
-            except Exception:
-                if self.error_handler:
-                    return self.error_handler(ErrorContext(sargs, kwargs))
-                else:
-                    raise
-            else:
-                kwargs.update(data)
-                return func(*args, **kwargs)
+        func_is_coro = iscoroutinefunction(func)
+        getter_is_coro = iscoroutinefunction(self.getter)
+        key = (('func', func_is_coro),
+               ('getter', getter_is_coro),
+               ('validator', func_is_coro or getter_is_coro))
+        try:
+            gen = GEN_CACHE[key]
+        except:
+            from . import validator_tpl
+            code = transform(validator_tpl, dict(key))
+            ctx = {}
+            exec(code, ctx, ctx)
+            gen = GEN_CACHE[key] = ctx['gen_validator']
 
-        inner.schema = self.schema
-        return inner
+        return gen(func, self.schema, self.getter, self.error_handler, self.skip_args)
 
     def __or__(self, other):
         return clone(self, schema=pipe(self.schema, other))

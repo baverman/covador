@@ -1,6 +1,8 @@
 import sys
 
 PY2 = sys.version_info[0] == 2
+COROUTINE = sys.version_info[:2] >= (3, 4)
+ASYNC_AWAIT = sys.version_info[:2] >= (3, 5)
 
 utype = type(u'')
 btype = type(b'')
@@ -37,11 +39,15 @@ if PY2:  # pragma: no py3 cover
     import urlparse
     from urllib import urlencode
 
+    def iscoroutinefunction(fun):
+        return False
+
     exec('def reraise(tp, value, tb=None):\n raise tp, value, tb')
 else:  # pragma: no py2 cover
     import builtins
     from urllib import parse as urlparse
     from urllib.parse import urlencode
+    from asyncio import iscoroutinefunction
 
     def reraise(tp, value, tb=None):
         if value.__traceback__ is not tb:
