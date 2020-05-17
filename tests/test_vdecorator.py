@@ -3,6 +3,7 @@ import pytest
 from covador import list_schema, schema, dpass, soft_map, typed_map, compat
 from covador.types import Int, SoftListMap
 from covador.utils import wrap_in
+from covador.errors import BadField
 from covador.vdecorator import (ErrorHandler, ErrorContext,
                                 ValidationDecorator, mergeof)
 
@@ -200,6 +201,35 @@ def test_typed_map():
         return data
 
     assert boo({'arg': '10', 'foo': 20}) == {'arg': 10, 'foo': 20}
+
+
+def test_bad_field():
+    getter = lambda it: it
+    v = ValidationDecorator(getter, None, schema)
+
+    @v(arg=int)
+    def boo(request, arg):
+        raise BadField('name', 'msg')
+
+    with pytest.raises(BadField):
+        boo({'arg': 1})
+
+
+def test_bad_field_with_error_handler():
+    getter = lambda it: it
+
+    def on_error(e):
+        assert str(e.exc_info[1]) == str({'name': 'msg'})
+        return 'foo'
+
+    v = ValidationDecorator(getter, None, schema).on_error(on_error)
+
+    @v(arg=int)
+    def boo(request, arg):
+        raise BadField('name', 'msg')
+
+    assert boo({'arg': 1}) == 'foo'
+
 
 
 if compat.ASYNC_AWAIT:

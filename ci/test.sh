@@ -10,6 +10,7 @@ coverage_key=coverage$pyver_major
 
 python -m pytest \
   --cov covador \
+  --no-cov-on-fail \
   --cov-report term-missing \
   --cov-fail-under=100 \
   --cov-config ${!coverage_key} \

@@ -1,5 +1,6 @@
 from functools import wraps
 from covador.vdecorator import ErrorContext
+from covador.errors import Invalid
 
 __await__func = __await__getter = None
 
@@ -18,7 +19,13 @@ def gen_validator(func, schema, getter, error_handler, skip_args):
                 raise
         else:
             kwargs.update(data)
-            return __await__func(func(*args, **kwargs))
+            try:
+                return __await__func(func(*args, **kwargs))
+            except Invalid:
+                if error_handler:
+                    return error_handler(ErrorContext(sargs, kwargs))
+                else:
+                    raise
 
     inner.schema = schema
     return inner

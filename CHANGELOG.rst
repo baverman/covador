@@ -1,13 +1,17 @@
 dev
 ===
 
-* [Feature] python 3.8 support
+* [Break] ``covador.aiohttp.AsyncValidationDecorator`` removed in favour of unified
+  sync/async ast transformation (``validtor_tpl.py``).
+* [Feature] python 3.8 support.
+* [Feature] view function can raise ``covador.errors.BadField`` exception and
+  covador will handle it with an approptiate error handler.
 
 
 0.9.26
 ======
 
-* [Fix] Right hand pipe must coerce value to item
+* [Fix] Right hand pipe must coerce value to item.
 
 
 0.9.25

@@ -8,6 +8,11 @@ class Invalid(ValueError):
         ValueError.__init__(self, repr(self.errors))
 
 
+class BadField(Invalid):
+    def __init__(self, name, message):
+        Invalid.__init__(self, {name: message}, None)
+
+
 class RequiredExcepion(ValueError):
     def __init__(self, message=None):
         ValueError.__init__(self, message or 'Required item')
