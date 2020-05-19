@@ -1,12 +1,13 @@
 from functools import wraps
-from asyncio import coroutine, coroutines
 
 from aiohttp.web import HTTPBadRequest
 
 from . import schema, list_schema
 from .utils import parse_qs
+from .autils import mark_coro
 from .vdecorator import ValidationDecorator, ErrorHandler, mergeof
 from .errors import error_to_json
+from .ast_transformer import execute
 
 
 def error_adapter(func):
@@ -31,42 +32,13 @@ def get_qs(request):
         return qs
 
 
+funcs = execute('aiohttp_async.py', (('fn', True),))
+get_form = funcs['get_form']
+get_json = funcs['get_json']
+
+
 def get_request(obj):
     return getattr(obj, 'request', obj)
-
-
-def listdict(mdict):
-    result = {}
-    for k, v in mdict.items():
-        result.setdefault(k, []).append(v)
-    return result
-
-
-@coroutine
-def get_form(request):
-    try:
-        return request._covador_form
-    except AttributeError:
-        if request.content_type.startswith('multipart/form-data'):
-            form = listdict((yield from request.post()))
-        elif request.content_type.startswith('application/x-www-form-urlencoded'):
-            form = parse_qs((yield from request.read()))
-        else:
-            form = {}
-        form = request._covador_form = form
-        return form
-
-
-@coroutine
-def get_json(request):
-    if request.content_type.startswith('application/json'):
-        return (yield from request.json())
-    return {}
-
-
-def mark_coro(fn):
-    fn._is_coroutine = getattr(coroutines, '_is_coroutine', True)
-    return fn
 
 
 _query_string = lambda request, *_args, **_kwargs: get_qs(get_request(request))

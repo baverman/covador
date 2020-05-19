@@ -6,6 +6,9 @@ dev
 * [Feature] python 3.8 support.
 * [Feature] view function can raise ``covador.errors.Invalid`` exception and
   covador will handle it with an appropriate error handler.
+* [Fix] use AST transformer to get legacy and new style coroutines for
+  ``covador.aiohttp.get_form`` and ``covador.aiohttp.get_json``. Fixes
+  ``@coroutine`` deprecation warning in python3.8.
 
 
 0.9.26
