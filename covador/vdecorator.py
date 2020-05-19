@@ -1,15 +1,13 @@
 import os
 import sys
 import logging
-from functools import wraps
 
 from .compat import reraise, iscoroutinefunction
 from .utils import clone
 from .types import make_schema, pipe
-from .ast_transformer import transform
+from .ast_transformer import execute
 
 DEBUG = os.environ.get('COVADOR_DEBUG')
-GEN_CACHE = {}
 log = logging.getLogger('covador.bad-request')
 
 
@@ -19,7 +17,8 @@ class ErrorContext(object):
         self.kwargs = kwargs or {}
         self.exc_info = exc_info or sys.exc_info()
         if DEBUG:  # pragma: no cover
-            log.error('Bad request: %r', self.exc_info[1], exc_info=self.exc_info)
+            log.error(
+                'Bad request: %r', self.exc_info[1], exc_info=self.exc_info)
         else:
             log.info('Bad request: %r', self.exc_info[1])
 
@@ -61,26 +60,21 @@ class Validator(object):
     def __call__(self, func):
         func_is_coro = iscoroutinefunction(func)
         getter_is_coro = iscoroutinefunction(self.getter)
-        key = (('func', func_is_coro),
-               ('getter', getter_is_coro),
-               ('validator', func_is_coro or getter_is_coro))
-        try:
-            gen = GEN_CACHE[key]
-        except:
-            from . import validator_tpl
-            code = transform(validator_tpl, dict(key))
-            ctx = {}
-            exec(code, ctx, ctx)
-            gen = GEN_CACHE[key] = ctx['gen_validator']
+        params = (('func', func_is_coro),
+                  ('getter', getter_is_coro),
+                  ('validator', func_is_coro or getter_is_coro))
 
-        return gen(func, self.schema, self.getter, self.error_handler, self.skip_args)
+        gen = execute('gen_validator.py', params)['gen_validator']
+        return gen(func, self.schema, self.getter,
+                   self.error_handler, self.skip_args)
 
     def __or__(self, other):
         return clone(self, schema=pipe(self.schema, other))
 
 
 class ValidationDecorator(object):
-    def __init__(self, getter, error_handler, top_schema, skip_args=0, validator=None):
+    def __init__(self, getter, error_handler, top_schema,
+                 skip_args=0, validator=None):
         self.getter = getter
         self.top_schema = top_schema
         self.skip_args = skip_args
@@ -98,14 +92,20 @@ class ValidationDecorator(object):
 def mergeof(*vdecorators):
     first = vdecorators[0]
 
-    getters = [r.getter for r in vdecorators]
+    sync_getters = [r.getter for r in vdecorators
+                    if not iscoroutinefunction(r.getter)]
+    async_getters = [r.getter for r in vdecorators
+                    if iscoroutinefunction(r.getter)]
+
     item_getters = [r.top_schema.item_getter for r in vdecorators]
 
-    def getter(*args, **kwargs):
-        return [g(*args, **kwargs) for g in getters]
+    params = (('getter', bool(async_getters)),)
+    getter = execute('merge_getter.py', params)['merge_getter'](
+        sync_getters, async_getters)
 
     top_schema = make_schema(AltItemGetter(item_getters))
-    return ValidationDecorator(getter, first.error_handler, top_schema, first.skip_args)
+    return ValidationDecorator(
+        getter, first.error_handler, top_schema, first.skip_args)
 
 
 class ErrorHandler(object):

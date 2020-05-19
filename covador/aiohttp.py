@@ -1,32 +1,12 @@
 from functools import wraps
-from asyncio import coroutine, iscoroutine, coroutines
+from asyncio import coroutine, coroutines
 
 from aiohttp.web import HTTPBadRequest
 
 from . import schema, list_schema
-from .types import make_schema
 from .utils import parse_qs
-from .vdecorator import ValidationDecorator, ErrorHandler, AltItemGetter
+from .vdecorator import ValidationDecorator, ErrorHandler, mergeof
 from .errors import error_to_json
-
-
-def mergeof(*vdecorators):
-    first = vdecorators[0]
-    item_getters = [r.top_schema.item_getter for r in vdecorators]
-
-    @coroutine
-    def getter(*args, **kwargs):
-        result = []
-        for v in vdecorators:
-            data = v.getter(*args, **kwargs)
-            if iscoroutine(data):
-                data = (yield from data)
-            result.append(data)
-        return result
-
-    top_schema = make_schema(AltItemGetter(item_getters))
-    return ValidationDecorator(getter, first.error_handler, top_schema,
-                               first.skip_args)
 
 
 def error_adapter(func):

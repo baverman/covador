@@ -2,10 +2,10 @@ dev
 ===
 
 * [Break] ``covador.aiohttp.AsyncValidationDecorator`` removed in favour of unified
-  sync/async ast transformation (``validtor_tpl.py``).
+  sync/async through AST transformation (``_async/gen_validator.py``).
 * [Feature] python 3.8 support.
-* [Feature] view function can raise ``covador.errors.BadField`` exception and
-  covador will handle it with an approptiate error handler.
+* [Feature] view function can raise ``covador.errors.Invalid`` exception and
+  covador will handle it with an appropriate error handler.
 
 
 0.9.26

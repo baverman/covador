@@ -1,5 +1,9 @@
 import ast
+import os.path
+
 from covador.compat import COROUTINE, ASYNC_AWAIT, PY2
+
+GEN_CACHE = {}
 
 
 def get_fn_param(name):
@@ -40,17 +44,16 @@ class AsyncTransformer(ast.NodeTransformer):
                     return ast.YieldFrom(value=node.args[0], lineno=node.lineno, col_offset=node.col_offset)
             else:
                 return node.args[0]
-        return node
+        return self.generic_visit(node)
 
 
-def get_ast(module):
-    fname = module.__file__.rstrip('c')
+def get_ast(fname):
     with open(fname) as f:
-        return fname, ast.parse(f.read(), fname)
+        return ast.parse(f.read(), fname)
 
 
-def transform(module, params):
-    fname, tree = get_ast(module)
+def transform(fname, params):
+    tree = get_ast(fname)
     transformed = AsyncTransformer(params).visit(tree)
     if COROUTINE and not ASYNC_AWAIT:  # pragma: no cover
         transformed.body.insert(0, ast.ImportFrom(
@@ -59,4 +62,20 @@ def transform(module, params):
             col_offset=0,
             names=[ast.alias(name='coroutine', asname=None)]))
 
-    return compile(transformed, fname, 'exec')
+    return transformed
+
+
+def execute(fname, params):
+    key = fname, params
+    try:
+        return GEN_CACHE[key]
+    except KeyError:
+        pass
+
+    fname = os.path.join(os.path.dirname(__file__), '_async', fname)
+    tree = transform(fname, dict(params))
+    code = compile(tree, fname, 'exec')
+    ctx = {}
+    exec(code, ctx, ctx)
+    GEN_CACHE[key] = ctx
+    return ctx

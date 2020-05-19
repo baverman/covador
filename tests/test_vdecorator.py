@@ -231,7 +231,6 @@ def test_bad_field_with_error_handler():
     assert boo({'arg': 1}) == 'foo'
 
 
-
 if compat.ASYNC_AWAIT:
     from tests._test_async_vdecorator import *
 elif compat.COROUTINE:

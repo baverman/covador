@@ -1,6 +1,6 @@
-from covador import validator_tpl
-from covador.ast_transformer import transform
+from covador.ast_transformer import execute
 
 
 def test_simple():
-    transform(validator_tpl, {'func': False, 'getter': False, 'validator': False})
+    execute('gen_validator.py',
+            (('func', False), ('getter', False), ('validator', False)))
