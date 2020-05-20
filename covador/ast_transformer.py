@@ -1,3 +1,4 @@
+import sys
 import ast
 import os.path
 
@@ -65,17 +66,30 @@ def transform(fname, params):
     return transformed
 
 
-def execute(fname, params):
-    key = fname, params
+def execute(module, params):
+    key = module, params
     try:
         return GEN_CACHE[key]
     except KeyError:
         pass
 
-    fname = os.path.join(os.path.dirname(__file__), '_async', fname)
+    parts = module.split('.')
+    parts[-1] += '.py'
+
+    fname = os.path.join(os.path.dirname(__file__), *parts[1:])
     tree = transform(fname, dict(params))
     code = compile(tree, fname, 'exec')
     ctx = {}
     exec(code, ctx, ctx)
     GEN_CACHE[key] = ctx
     return ctx
+
+
+def import_module(module, params):
+    ctx = execute(module, params)
+    m = type(sys)(module)
+    vars(m).update(ctx)
+    m.params = params
+    sys.modules[module] = m
+    root, _, mname = module.partition('.')
+    setattr(sys.modules[root], mname, m)

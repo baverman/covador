@@ -47,8 +47,6 @@ aiohttp_async35="aiohttp==2.3.10 aiohttp==3.6.2"
 aiohttp_async36="aiohttp==2.3.10 aiohttp==3.6.2"
 aiohttp_async37="aiohttp==3.0.9 aiohttp==3.6.2"
 aiohttp_async38="aiohttp==3.0.9 aiohttp==3.6.2"
-aiohttp_yield_cover_include=",covador/_async/aiohttp_async.py"
-aiohttp_async_cover_include=",covador/_async/aiohttp_async.py"
 
 sanic35="sanic==0.8.3 sanic==19.3.1"
 sanic36="sanic==0.8.3 sanic==19.12.2"
@@ -60,7 +58,7 @@ frameworks_key=frameworks$pyver
 for frm in ${!frameworks_key}; do
     f_key=${frm}${pyver}
     cover_key=cover_$frm
-    cover_include_key=${frm}_cover_include
+    cover_files=$(find covador -name "${!cover_key}*.py" -print0 | tr '\0' ,)
     for pkg in ${!f_key}; do
         echo
         echo "### Testing $pkg"
@@ -71,6 +69,6 @@ for frm in ${!frameworks_key}; do
             touch $pypath/.done
         fi
         COVADOR_DEBUG=1 PYTHONPATH=$PYTHONPATH:$pypath python -m pytest integration -k test_$frm
-        COVERAGE_FILE=$frm.cov coverage report -m --fail-under=100 --include covador/${!cover_key}.py${!cover_include_key}
+        COVERAGE_FILE=$frm.cov coverage report -m --fail-under=100 --include "$cover_files"
     done
 done

@@ -7,7 +7,10 @@ from .utils import parse_qs
 from .autils import mark_coro
 from .vdecorator import ValidationDecorator, ErrorHandler, mergeof
 from .errors import error_to_json
-from .ast_transformer import execute
+from .ast_transformer import import_module
+
+import_module('covador.aiohttp_t', (('fn', True),))
+from .aiohttp_t import get_form, get_json
 
 
 def error_adapter(func):
@@ -31,10 +34,6 @@ def get_qs(request):
         qs = request['_covador_qs'] = parse_qs(request.query_string or '')
         return qs
 
-
-funcs = execute('aiohttp_async.py', (('fn', True),))
-get_form = funcs['get_form']
-get_json = funcs['get_json']
 
 
 def get_request(obj):

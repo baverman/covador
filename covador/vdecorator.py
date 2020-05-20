@@ -64,7 +64,7 @@ class Validator(object):
                   ('getter', getter_is_coro),
                   ('validator', func_is_coro or getter_is_coro))
 
-        gen = execute('gen_validator.py', params)['gen_validator']
+        gen = execute('covador.gen_validator_t', params)['gen_validator']
         return gen(func, self.schema, self.getter,
                    self.error_handler, self.skip_args)
 
@@ -100,7 +100,7 @@ def mergeof(*vdecorators):
     item_getters = [r.top_schema.item_getter for r in vdecorators]
 
     params = (('getter', bool(async_getters)),)
-    getter = execute('merge_getter.py', params)['merge_getter'](
+    getter = execute('covador.merge_getter_t', params)['merge_getter'](
         sync_getters, async_getters)
 
     top_schema = make_schema(AltItemGetter(item_getters))
