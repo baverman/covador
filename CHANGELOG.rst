@@ -1,5 +1,5 @@
-dev
-===
+0.10
+====
 
 * [Break] ``covador.aiohttp.AsyncValidationDecorator`` removed in favour of unified
   sync/async through AST transformation (``_async/gen_validator.py``).
