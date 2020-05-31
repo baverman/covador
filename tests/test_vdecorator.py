@@ -219,7 +219,7 @@ def test_bad_field_with_error_handler():
     getter = lambda it: it
 
     def on_error(e):
-        assert str(e.exc_info[1]) == str({'name': 'msg'})
+        assert str(e.exc_info[1]) == str((('name', 'msg'),))
         return 'foo'
 
     v = ValidationDecorator(getter, None, schema).on_error(on_error)

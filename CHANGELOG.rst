@@ -1,3 +1,9 @@
+0.10.1dev
+=========
+
+* [Fix] error_to_dict fail on BadField error.
+
+
 0.10
 ====
 

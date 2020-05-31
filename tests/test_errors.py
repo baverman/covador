@@ -1,5 +1,5 @@
 from covador import schema, item, nitem
-from covador.errors import error_to_dict, error_to_json
+from covador.errors import error_to_dict, error_to_json, BadField
 
 
 def test_error_to_dict():
@@ -12,3 +12,7 @@ def test_error_to_dict():
         assert errors == {'foo': {'boo': 'Required item'}, 'bar': {1: "invalid literal for int() with base 10: 'a'"}}
 
         json = error_to_json(e)
+
+
+    err = error_to_dict(BadField('field', 'error'))
+    assert err == {'field': 'error'}

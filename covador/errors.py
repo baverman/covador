@@ -10,7 +10,7 @@ class Invalid(ValueError):
 
 class BadField(Invalid):
     def __init__(self, name, message):
-        Invalid.__init__(self, {name: message}, None)
+        Invalid.__init__(self, ((name, message),), None)
 
 
 class RequiredExcepion(ValueError):
