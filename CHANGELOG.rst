@@ -1,5 +1,5 @@
-0.10.1dev
-=========
+0.10.1
+======
 
 * [Fix] error_to_dict fail on BadField error.
 
