@@ -1,7 +1,7 @@
 Covador
 =======
 
-Validation library for processing http endpoint arguments.
+Framework agnostic fast validation library.
 
 .. code:: python
 
@@ -23,17 +23,30 @@ Validation library for processing http endpoint arguments.
         app.run()
 
 
-* Support for flask, django, aiohttp and tornado.
-* Simple creating of custom ``query_string``/``form``/``params``/``json_body``/``args`` wrappers.
-* Multi dict support via item ``multi`` param.
-* Multi dict keys support via item ``src`` param.
+* Support for flask (0.x, 1.0.x, 1.1.x), django (1.x, 2.x), aiohttp (2.x, 3.x),
+  tornado (3.x, 4.x, 5.x, 6.x) and sanic (0.x, 18.x, 19.x).
+* Simple creation of custom ``query_string``/``form``/``params``/``json_body``/``args`` wrappers.
+* Multi dict support.
+* Mapping from source to destination fields.
 * Simple interface for custom validators/processors it's just a callable.
-* Maps, Lists, Tuples, Enums.
-* Validation chains: ``opt(default=[]) | split(separator=' ') | List(int) | (lambda it: it[:10])``
-  or more concise ``opt(split(int, separator=' '), []) | operator.itemgetter(slice(10))`` —
-  an optional argument of space separated integers and we need top 10 items from it and it
+* Maps, typed Maps, Lists, Tuples, Enums.
+* Validation chains::
+
+     p = (opt(default=[]) | split(separator=' ')
+          | List(int) | (lambda it: it[:10]))
+
+  or more concise using nesting and ``operator.itemgetter``::
+
+     p = (opt(split(int, separator=' '), [])
+          | itemgetter(slice(10)))
+
+  Explanationan: an optional argument of space separated integers and we need top 10 items from it and it
   is empty by default.
-* Literal schema: ``schema(foo=[{'boo': int}])``, validates ``{'foo': [{'boo': 10}, {'boo': 20}]}``.
+* Literal schemas::
+
+     schema(foo=[{'boo': int}])
+
+  validates ``{'foo': [{'boo': 10}, {'boo': 20}]}``.
 * Bytes/unicode aware.
 
 

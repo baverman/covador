@@ -1,3 +1,5 @@
+.. default-role:: py:obj
+
 API
 ===
 
@@ -13,6 +15,8 @@ covador.types
 
 .. automodule:: covador.types
    :members:
+   :ignore-module-all:
+   :member-order: bysource
 
 
 covador.utils

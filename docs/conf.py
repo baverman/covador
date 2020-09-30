@@ -29,8 +29,8 @@
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-import sys
-sys.path.insert(0, '..')
+import os, sys
+sys.path.insert(0, os.path.abspath('..'))
 import covador
 
 extensions = [
@@ -55,7 +55,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Covador'
-copyright = u'2016, Anton Bobrov'
+copyright = u'2020, Anton Bobrov'
 author = u'Anton Bobrov'
 
 # The version info for the project you're documenting, acts as replacement for

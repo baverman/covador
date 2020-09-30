@@ -21,6 +21,26 @@ EMPTY_VALUES = b'', u''
 
 
 class item(object):
+    """A `Map` field placeholder and `None` short-circuit validator.
+
+    As a map field `item` knowns about its own source/destination
+    field names and is it a multi or single value field.
+
+    As a validator `item` can raise error if value is None and
+    stops processing chain if field is optional.
+
+    `item` is a pipepable entity.
+
+    :param typ: validator, alias or literal type to use as item validator.
+    :param default: default value.
+    :param source_key: **deprecated**, use *src* param instead.
+    :param src: name of a key in a input map.
+    :param dest: name of a key in an out map.
+    :param required: forces a value to be not None.
+    :param multi: marks map key as multi-value field.
+                  If **True** *typ* will be wrapped into `List`.
+    :param empty_is_none: treat empty values (i.e empty strings) as None values.
+    """
     def __init__(self, typ=None, default=None, source_key=None, src=None, dest=None,
                  required=True, multi=False, empty_is_none=True, **kwargs):
         self.src = source_key or src
@@ -36,6 +56,17 @@ class item(object):
         self.pipe = []
 
     def clone(self, **kwargs):
+        """Returns a copy of an item with updated attributes
+
+        >>> item(int)(None)
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+          File "covador/types.py", line 76, in __call__
+            if self.required:
+        covador.errors.RequiredExcepion: Required item
+
+        >>> item(int).clone(required=False)(None)
+        """
         return clone(self, pipe=self.pipe[:], **kwargs)
 
     def __or__(self, other):
@@ -70,18 +101,31 @@ class item(object):
 
 
 def opt(*args, **kwargs):
+    """A shortcut to create optional items.
+
+    ``opt(str)`` is the same as ``item(str, required=False)``
+    """
     return item(*args, required=False, **kwargs)
 
 
 def nopt(*args, **kwargs):
+    """A shortcut to create non-empty optional items.
+
+    ``nopt(str)`` is the same as ``item(str, required=False, empty_is_none=False)``
+    """
     return item(*args, empty_is_none=False, required=False, **kwargs)
 
 
 def nitem(*args, **kwargs):
+    """A shortcut to create non-empty items.
+
+    ``nitem(str)`` is the same as ``item(str, empty_is_none=False)``
+    """
     return item(*args, empty_is_none=False, **kwargs)
 
 
 def get_item(it):
+    """Ensures that argument is a new `item` or creates `item` from it."""
     if isinstance(it, item):
         it = clone(it)
     else:
@@ -90,31 +134,37 @@ def get_item(it):
 
 
 def get_map(it):
+    """Converts a dict of fields into a `Map`."""
     if isinstance(it, dict):
         it = Map(it)
     return it
 
 
 class ItemGetter(object):
-    def get(self, data, item):
-        '''Get corresponding data for item
+    """Default `Map` item getter.
 
-        :param data: source data
-        :param item: item to get
+    Treats data as a dict and invokes ``data.get`` with ``item.src`` key.
+    """
+    def get(self, data, item):
+        """Get corresponding data for an item.
 
         Subsclasses can override this method to implement map access to more complex
-        structures then plain dict
-        '''
+        structures then plain dict.
+
+        :param data: source data.
+        :param item: item to get.
+        """
         return data.get(item.src)
 
     def to_dict(self, data, multi=False):
+        """Returns map data as a dict."""
         return data
 
 
 class ListItemGetter(ItemGetter):
     '''Get items from dict with lists as values
 
-    Can be used as root getter for result of pasrsing query string.
+    Can be used as root getter for result of parsing HTTP query string.
     '''
     def get(self, data, field):
         if field.multi:
