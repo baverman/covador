@@ -53,20 +53,25 @@ sanic36="sanic==0.8.3 sanic==19.12.2"
 sanic37="sanic==0.8.3 sanic==19.12.2"
 sanic38="sanic==19.12.2"
 
+sanic35_deps="uvloop==0.12.2"
+sanic36_deps="uvloop==0.12.2"
+
 frameworks_key=frameworks$pyver
 
 for frm in ${!frameworks_key}; do
     f_key=${frm}${pyver}
+    deps_key=${frm}${pyver}_deps
+    deps="${!deps_key}"
     cover_key=cover_$frm
     cover_files=$(find covador -name "${!cover_key}*.py" -print0 | tr '\0' ,)
     for pkg in ${!f_key}; do
         echo
         echo "### Testing $pkg"
         pypath=/tmp/covador-$pyver-$pkg
-        if [ ! -e $pypath/.done ]; then
+        if [ ! -e $pypath/.done-v1 ]; then
             # force attrs version to fix pytest error
-            pip --disable-pip-version-check --exists-action=i install $PIP_OPTS --target=$pypath $pkg attrs==18.2.0 | cat
-            touch $pypath/.done
+            pip --disable-pip-version-check --exists-action=i install $PIP_OPTS --target=$pypath $deps $pkg attrs==18.2.0 | cat
+            touch $pypath/.done-v1
         fi
         COVADOR_DEBUG=1 PYTHONPATH=$PYTHONPATH:$pypath python -m pytest integration -k test_$frm
         COVERAGE_FILE=$frm.cov coverage report -m --fail-under=100 --include "$cover_files"

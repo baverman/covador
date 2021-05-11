@@ -4,4 +4,4 @@ FROM ${IMAGE}
 ARG PYVERSION
 RUN apk --no-cache add build-base linux-headers bash
 
-RUN pip install pytest pytest-cov requests
+RUN pip install attrs==18.2.0 "pytest<6" pytest-cov requests
