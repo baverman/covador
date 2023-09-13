@@ -1,3 +1,9 @@
+0.10.2
+======
+
+* [Fix] Do not parse semicolons in urlencoded POST body
+
+
 0.10.1
 ======
 
