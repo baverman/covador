@@ -8,6 +8,8 @@ from covador.utils import parse_qs, wrap_in, merge_dicts
 def test_parse_qs():
     assert parse_qs(b'') == {}
     assert parse_qs(bstr('boo', 'utf-8')) == {'boo': [b'']}
+    assert parse_qs(bstr('boo;foo', 'utf-8')) == {'boo': [b''], 'foo': [b'']}
+    assert parse_qs(bstr('boo;foo', 'utf-8'), False) == {'boo;foo': [b'']}
     assert parse_qs(bstr('boo=1&boo=2', 'utf-8')) == {'boo': [b'1', b'2']}
 
     data = urlencode({'boo': u'буу'.encode('utf-8')})

@@ -17,7 +17,7 @@ def get_form(__async__fn, request):
         if request.content_type.startswith('multipart/form-data'):
             form = listdict(__await__fn(request.post()))
         elif request.content_type.startswith('application/x-www-form-urlencoded'):
-            form = parse_qs(__await__fn(request.read()))
+            form = parse_qs(__await__fn(request.read(), process_semicolons=False))
         else:
             form = {}
         form = request._covador_form = form

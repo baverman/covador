@@ -12,14 +12,18 @@ def merge_dicts(*dicts, **kwargs):
     return result
 
 
-def parse_qs(qs):
+def parse_qs(qs, process_semicolons=True):
     """Helper func to parse query string with py2/py3 compatibility
 
     Ensures that dict keys are native strings.
     """
     result = {}
     qs = bstr(qs, 'latin1')
-    pairs = [s2 for s1 in qs.split(b'&') for s2 in s1.split(b';')]
+    if process_semicolons:
+        pairs = [s2 for s1 in qs.split(b'&') for s2 in s1.split(b';')]
+    else:
+        pairs = [s1 for s1 in qs.split(b'&')]
+
     uq = urlparse.unquote if PY2 else urlparse.unquote_to_bytes
     for name_value in pairs:
         if not name_value:

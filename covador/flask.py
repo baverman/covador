@@ -30,7 +30,7 @@ def get_form():
         if ctype.startswith('multipart/form-data'):
             form = request.form.to_dict(False)
         elif ctype.startswith('application/x-www-form-urlencoded'):
-            form = parse_qs(request.get_data(parse_form_data=False))
+            form = parse_qs(request.get_data(parse_form_data=False), process_semicolons=False)
         else:
             form = {}
         request._covador_form = form

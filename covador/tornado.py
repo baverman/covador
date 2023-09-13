@@ -31,7 +31,7 @@ def get_form(request):
         if content_type.startswith('multipart/form-data'):
             result = request.body_arguments
         elif content_type.startswith('application/x-www-form-urlencoded'):
-            result = parse_qs(request.body)
+            result = parse_qs(request.body, process_semicolons=False)
         else:
             result = {}
         request._covador_form = result

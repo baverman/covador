@@ -18,13 +18,13 @@ cover_aiohttp_async=aiohttp
 cover_aiohttp_yield=aiohttp
 cover_sanic=sanic
 
-flask26="flask==0.12.4 flask==1.0.2"
-flask27="flask==0.12.4 flask==1.1.1"
-flask34="flask==0.12.4 flask==1.0.2"
-flask35="flask==0.12.4 flask==1.1.2"
-flask36="flask==0.12.4 flask==1.1.2"
-flask37="flask==0.12.4 flask==1.1.2"
-flask38="flask==0.12.4 flask==1.1.2"
+flask26="flask==1.0.2"
+flask27="flask==1.1.1"
+flask34="flask==1.0.2"
+flask35="flask==1.1.2"
+flask36="flask==1.1.2"
+flask37="flask==1.1.2"
+flask38="flask==2.2.3"
 
 django26="django==1.4.22"
 django27="django==1.4.22 django==1.9.13 django==1.11.13"

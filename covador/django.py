@@ -50,7 +50,7 @@ def get_form(request):
         if content_type.startswith('multipart/form-data'):
             form = dict(request.POST.lists())
         elif content_type.startswith('application/x-www-form-urlencoded'):
-            form = parse_qs(request.body)
+            form = parse_qs(request.body, process_semicolons=False)
         else:
             form = {}
         form = request._covador_form = form
